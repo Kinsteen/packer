@@ -48,6 +48,8 @@ jobs:
       run: >-
         gh release delete
         "$GITHUB_REF_NAME"
+        --repo "$GITHUB_REPOSITORY"
+        --yes
     - name: Create GitHub Release
       env:
         GITHUB_TOKEN: ${{ github.token }}
