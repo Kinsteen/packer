@@ -47,7 +47,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       run: >-
         gh release create
-        "$GITHUB_REF_NAME"
+        "Packer (${GITHUB_SHA::7})"
         --repo "$GITHUB_REPOSITORY"
         --notes ""
     - name: Upload artifact signatures to GitHub Release
