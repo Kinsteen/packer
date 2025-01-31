@@ -1,5 +1,5 @@
 # Packer
-![PyPI - Version](https://img.shields.io/pypi/v/modpacker?link=https%3A%2F%2Fpypi.org%2Fproject%2Fmodpacker)
+[![PyPI - Version](https://img.shields.io/pypi/v/modpacker)](https://pypi.org/project/modpacker)
 
 *The best modpack creation tool you know*
 
