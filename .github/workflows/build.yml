@@ -42,6 +42,11 @@ jobs:
       with:
         name: python-package-distributions
         path: dist/
+    - name: Delete old release
+      run: >-
+        gh release delete
+        "$GITHUB_REF_NAME"
+
     - name: Create GitHub Release
       env:
         GITHUB_TOKEN: ${{ github.token }}
