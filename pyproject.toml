@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "packer"
+version = "0.0.1"
+dependencies = [
+    "requests",
+    "cutie",
+    "click",
+]
+
+[project.scripts]
+packer = "packer.packer:main"
