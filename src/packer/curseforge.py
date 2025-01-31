@@ -1,8 +1,9 @@
 import packer.cutie as cutie
 import datetime
 import requests
+import json
 
-def select_dep(mod_id, file_id, version_choice=None, chosen_urls=[]) -> list[str]:
+def select_dep(mod_id, file_id, latest, version_choice=None, chosen_urls=[]) -> list[str]:
     base_mod = requests.get(f"https://api.curse.tools/v1/cf/mods/{mod_id}").json()['data']
     base_file = requests.get(f"https://api.curse.tools/v1/cf/mods/{mod_id}/files/{file_id}").json()['data']
     print(f"Searching deps for {base_mod['name']} / {base_file['displayName']}")
@@ -14,7 +15,7 @@ def select_dep(mod_id, file_id, version_choice=None, chosen_urls=[]) -> list[str
         dep_mod = requests.get(f"https://api.curse.tools/v1/cf/mods/{dep['modId']}").json()['data']
 
         should_download = False
-        if dep["relationType"] == 2:
+        if dep["relationType"] == 2 and not latest:
             should_download = cutie.prompt_yes_or_no(f"Found optional mod '{dep_mod['name']}' for '{base_mod['name']}'. Download?")
         if dep["relationType"] == 3:
             should_download = True
@@ -25,6 +26,7 @@ def select_dep(mod_id, file_id, version_choice=None, chosen_urls=[]) -> list[str
             urls = []
             if len(r.json()['data']) == 0:
                 print(f"No files found for mod {dep_mod['name']}. Probably wrong modloader!")
+                print(f"https://api.curse.tools/v1/cf/mods/{dep['modId']}/files?gameVersion={version_choice}&modLoaderType=6")
                 continue
             already_added = False
             for version in r.json()['data'][0:5]:
@@ -33,25 +35,36 @@ def select_dep(mod_id, file_id, version_choice=None, chosen_urls=[]) -> list[str
                 if version['downloadUrl'] in chosen_urls:
                     already_added = True
             if not already_added:
-                choice = cutie.select(text_choices, clear_on_confirm=True)
+                if latest:
+                    choice = 0
+                else:
+                    choice = cutie.select(text_choices, clear_on_confirm=True)
                 file_chosen = r.json()['data'][choice]
                 print(f"Chosen {file_chosen['displayName']}")
                 chosen_urls.append(file_chosen['downloadUrl'])
-                select_dep(dep['modId'], file_chosen['id'], version_choice, chosen_urls)
+                select_dep(dep['modId'], file_chosen['id'], latest, version_choice=version_choice, chosen_urls=chosen_urls)
 
     return chosen_urls
 
-def curseforge_dep(url: str):
+def curseforge_dep(url: str, latest: bool):
     slug = url.split("/")[-3]
     # Only search mods
     r = requests.get(f"https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=6&slug={slug}")
     mod_id = r.json()['data'][0]['id']
     file_id = url.split("/")[-1]
 
-    chosen_urls = select_dep(mod_id, file_id)
+    chosen_urls = select_dep(mod_id, file_id, latest)
 
+    output = []
     for u in set(chosen_urls):
-        print(u)
+        output.append({
+            "downloads": [u],
+            "env": {
+                "client": "required",
+                "server": "required"
+            }
+        })
+    print(json.dumps(output, indent=4))
 
 def curseforge_url(url: str):
     slug = url.split("/")[-3]

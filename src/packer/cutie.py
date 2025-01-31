@@ -114,6 +114,7 @@ def select(
         caption_prefix (str, optional): Prefix for captions ().
         selected_index (int, optional): The index to be selected at first.
         confirm_on_select (bool, optional): Select keys also confirm.
+        clear_on_confirm(bool, optional): Clear the selection text when confirmed.
 
     Returns:
         int: The index that has been selected.

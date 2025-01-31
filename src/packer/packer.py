@@ -26,8 +26,10 @@ def curseforge_url(url: str):
 
 @curseforge.command(name = "dep")
 @click.argument('url')
-def curseforge_dep(url: str):
-    cf.curseforge_dep(url)
+@click.option("--latest", type=bool, default=False, help="Will always use latest files available (default: false)")
+def curseforge_dep(url: str, latest: bool):
+    print(latest)
+    cf.curseforge_dep(url, latest)
 
 @main.group(help="Modrinth helper tools")
 def modrinth():
