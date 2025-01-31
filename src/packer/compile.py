@@ -46,11 +46,17 @@ def compile():
     modrinth_index = open_config()
     for file in modrinth_index['files']:
         name = file["downloads"][0].split("/")[-1]
+
+        # Remove keys that are not modrinth.index.json standard
         if "type" not in file:
             file_type = "MOD"
         else:
             file_type = file['type']
             del file['type']
+
+        if 'project_url' in file:
+            del file['project_url']
+
         if file_type == "MOD":
             file['path'] = "mods/" + name
         elif file_type == "RESOURCE_PACK":

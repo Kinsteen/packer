@@ -3,6 +3,22 @@ import datetime
 import requests
 import json
 
+def cat_to_classid(cat) -> str:
+    table = {
+        "mc-mods": 6,
+        "texture-packs": 12,
+        "shaders": 6552,
+    }
+    return table[cat]
+
+def classid_to_cat(classid) -> str:
+    table = {
+        "6": "mc-mods",
+        "12": "texture-packs",
+        "6552": "shaders",
+    }
+    return table[str(classid)]
+
 def select_dep(mod_id, file_id, latest, version_choice=None, chosen_urls=[]) -> list[str]:
     base_mod = requests.get(f"https://api.curse.tools/v1/cf/mods/{mod_id}").json()['data']
     base_file = requests.get(f"https://api.curse.tools/v1/cf/mods/{mod_id}/files/{file_id}").json()['data']

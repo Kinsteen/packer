@@ -13,6 +13,10 @@ def open_config():
     with open("packer_config.json") as f:
         return json.loads(f.read())
 
+def persist_config(config: dict):
+    with open("packer_config.json", "w") as f:
+        f.write(json.dumps(config, indent=4))
+
 def load_cache():
     global cache
     # Cache should always be loaded quickly
