@@ -49,6 +49,7 @@ jobs:
         gh release create
         "Packer (${GITHUB_SHA::7})"
         --repo "$GITHUB_REPOSITORY"
+        --prerelease
         --notes ""
     - name: Upload artifact signatures to GitHub Release
       env:
