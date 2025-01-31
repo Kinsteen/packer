@@ -47,7 +47,8 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       run: >-
         gh release create
-        "Packer (${GITHUB_SHA::7})"
+        "$GITHUB_REF_NAME"
+        --title "Packer (${GITHUB_SHA::7})"
         --repo "$GITHUB_REPOSITORY"
         --prerelease
         --notes ""
