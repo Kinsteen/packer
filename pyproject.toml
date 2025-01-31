@@ -7,11 +7,17 @@ name = "modpacker"
 version = "0.0.1"
 description = "The best Minecraft modpack creation tool you know"
 readme = "README.md"
-dependencies = [
-    "requests",
-    "cutie",
-    "click",
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3",
 ]
+dependencies = [
+    "click",
+    "requests",
+]
+
+[project.urls]
+source = "https://github.com/Kinsteen/packer"
 
 [project.scripts]
 packer = "packer.packer:main"

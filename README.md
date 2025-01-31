@@ -1,7 +1,7 @@
 # Packer
 [![PyPI - Version](https://img.shields.io/pypi/v/modpacker)](https://pypi.org/project/modpacker)
 
-*The best modpack creation tool you know*
+*The best Minecraft modpack creation tool you know*
 
 ## Usage
 Install with:

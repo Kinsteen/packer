@@ -1,11 +1,10 @@
-import cutie
+import packer.cutie as cutie
 import datetime
 import requests
 
 def select_dep(mod_id, file_id, version_choice=None, chosen_urls=[]) -> list[str]:
     base_mod = requests.get(f"https://api.curse.tools/v1/cf/mods/{mod_id}").json()['data']
     base_file = requests.get(f"https://api.curse.tools/v1/cf/mods/{mod_id}/files/{file_id}").json()['data']
-    print(base_file)
     print(f"Searching deps for {base_mod['name']} / {base_file['displayName']}")
     if version_choice is None:
         print("Choose game version to search:")

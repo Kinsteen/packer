@@ -1,7 +1,4 @@
 import click
-import cutie
-import requests
-import datetime
 import packer.curseforge as cf
 import packer.config as config
 import packer.compile
