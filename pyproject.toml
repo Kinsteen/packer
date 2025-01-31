@@ -5,6 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "modpacker"
 version = "0.0.1"
+description = "The best Minecraft modpack creation tool you know"
+readme = "README.md"
 dependencies = [
     "requests",
     "cutie",
