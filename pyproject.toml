@@ -14,10 +14,20 @@ classifiers = [
 dependencies = [
     "click",
     "requests",
+    "tqdm"
 ]
+
+[project.optional-dependencies]
+dev = ["black", "ruff", "isort"]
 
 [project.urls]
 source = "https://github.com/Kinsteen/packer"
 
 [project.scripts]
 packer = "packer.packer:main"
+
+[tool.black]
+target-version = ['py39']
+line-length = 150
+
+[tool.ruff]

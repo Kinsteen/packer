@@ -149,18 +149,14 @@ def select(
                 if new_index not in caption_indices:
                     selected_index = new_index
                     break
-        elif (
-            keypress in DefaultKeys.confirm
-            or confirm_on_select
-            and keypress in DefaultKeys.select
-        ):
+        elif keypress in DefaultKeys.confirm or confirm_on_select and keypress in DefaultKeys.select:
             break
         elif keypress in DefaultKeys.interrupt:
             raise KeyboardInterrupt
 
     if clear_on_confirm:
         print(f"\033[{len(options) + 1}A")
-        print(f"\033[K\n" * (len(options) + 1))
+        print("\033[K\n" * (len(options) + 1))
         print(f"\033[{len(options) + 3}A")
 
     return selected_index
@@ -269,23 +265,14 @@ def select_multiple(
                 if new_index not in caption_indices:
                     cursor_index = new_index
                     break
-        elif (
-            hide_confirm
-            and keypress in DefaultKeys.confirm
-            or not hide_confirm
-            and cursor_index == max_index
-        ):
+        elif hide_confirm and keypress in DefaultKeys.confirm or not hide_confirm and cursor_index == max_index:
             if minimal_count > len(ticked_indices):
                 error_message = f"Must select at least {minimal_count} options"
             elif maximal_count is not None and maximal_count < len(ticked_indices):
                 error_message = f"Must select at most {maximal_count} options"
             else:
                 break
-        elif (
-            keypress in DefaultKeys.select
-            or not hide_confirm
-            and keypress in DefaultKeys.confirm
-        ):
+        elif keypress in DefaultKeys.select or not hide_confirm and keypress in DefaultKeys.confirm:
             if cursor_index in ticked_indices:
                 ticked_indices.remove(cursor_index)
             else:

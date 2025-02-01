@@ -1,11 +1,14 @@
-import requests
 import json
-
 import logging
+
+import requests
+
 logger = logging.getLogger(__name__)
+session = requests.Session()
+
 
 def get(url: str) -> dict:
-    r = requests.get(url)
+    r = session.get(url)
     try:
         return r.json()
     except Exception:
@@ -16,11 +19,16 @@ def get(url: str) -> dict:
             logger.error("Response:")
             logger.error(r.text)
 
+
 def post(url: str, data: dict) -> dict:
-    r = requests.post(url, data=json.dumps(data), headers={
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    })
+    r = session.post(
+        url,
+        data=json.dumps(data),
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+    )
     try:
         return r.json()
     except Exception:

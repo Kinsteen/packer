@@ -15,5 +15,16 @@ Run with `packer`! (you have to have it in path, pip will complain if it's not a
 ## Development
 Simply run:
 ```bash
-pip install --edit .
+pip install --edit ".[dev]"
+```
+
+You can run the formatters + linters:
+```
+./format+lint.sh
+
+# OR
+
+isort src
+black src
+ruff check src
 ```
