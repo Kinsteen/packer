@@ -12,9 +12,15 @@ atexit.register(on_exit)
 cache = None
 
 
-def open_config():
-    with open("packer_config.json") as f:
-        return json.loads(f.read())
+def open_config(silently_fail=False):
+    try:
+        with open("packer_config.json") as f:
+            return json.loads(f.read())
+    except Exception as e:
+        if silently_fail:
+            return None
+        else:
+            raise e
 
 
 def persist_config(config: dict):
@@ -24,15 +30,14 @@ def persist_config(config: dict):
 
 def load_cache():
     global cache
-    # Cache should always be loaded quickly
     if not os.path.exists("packer_cache.json"):
         cache = {}
-    with open("packer_cache.json", "r") as cache:
-        try:
-            cache = json.loads(cache.read())
-        except Exception:
-            with open("packer_cache.json", "w") as new_cache:
-                new_cache.write("{}")
+    else:
+        with open("packer_cache.json", "r") as cache:
+            try:
+                cache = json.loads(cache.read())
+            except Exception:
+                cache = {}
 
 
 def order_dict(dictionary):
@@ -40,13 +45,13 @@ def order_dict(dictionary):
 
 
 def persist_cache() -> dict:
-    global cache
-    if cache is not None:
+    if cache is not None and len(cache.keys()) > 0:
         with open("packer_cache.json", "w") as new_cache:
             new_cache.write(json.dumps(order_dict(cache), indent=4))
 
 
 def set_cache(key, val):
+    global cache
     cache[key] = val
 
 

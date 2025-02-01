@@ -4,15 +4,16 @@ import click
 
 import packer.compile
 import packer.config as config
-import packer.curseforge as cf
 import packer.migration
+import packer.services.curseforge as cf
+import packer.services.modrinth as mr
 from packer.log.multi_formatter import MultiFormatter
 
 logger = logging.getLogger(__name__)
 
 
 @click.group(invoke_without_command=True, help="By default, compile the modpack.")
-@click.option('-v', '--verbose', count=True)
+@click.option("-v", "--verbose", count=True)
 @click.pass_context
 def main(ctx, verbose):
     root_logger = logging.getLogger()
@@ -77,6 +78,7 @@ def modrinth():
     pass
 
 
-@modrinth.command(name="url")
-def modrinth_url():
-    pass
+@modrinth.command(name="dep")
+@click.argument("url")
+def modrinth_dep(url):
+    mr.modrinth_dep(url)
