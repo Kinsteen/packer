@@ -36,8 +36,10 @@ def migrate_add_project_url():
                 dl_url = file["downloads"][0]
                 if "modrinth" in dl_url:
                     project_id = dl_url.split("/")[-4]
-                    slug = get(f"https://api.modrinth.com/v2/project/{project_id}")["slug"]
-                    file["project_url"] = f"https://modrinth.com/mod/{slug}"
+                    ret = get(f"https://api.modrinth.com/v2/project/{project_id}")
+                    if ret is not None:
+                        slug = ret["slug"]
+                        file["project_url"] = f"https://modrinth.com/mod/{slug}"
                 else:
                     file_id = dl_url.split("/")[-3].rjust(4, "0") + dl_url.split("/")[-2].rjust(3, "0")
                     mod_id = post(
