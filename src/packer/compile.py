@@ -90,7 +90,7 @@ def compile():
         output.write(json.dumps(modrinth_index, indent=4))
 
     logger.info("Zipping pack...")
-    pack_name = f"{modrinth_index["name"].replace(" ", "-")}-{modrinth_index["versionId"].replace(" ", "-")}.mrpack"
+    pack_name = f"{modrinth_index['name'].replace(' ', '-')}-{modrinth_index['versionId'].replace(' ', '-')}.mrpack"
     with zipfile.ZipFile(pack_name, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
         zip.writestr("modrinth.index.json", json.dumps(modrinth_index, indent=4))
         add_folder_to_zip(zip, "overrides")

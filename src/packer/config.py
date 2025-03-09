@@ -63,3 +63,4 @@ def get_from_cache(name: str, property: str, get: Callable):
         if name not in cache:
             cache[name] = {}
         cache[name][property] = get()
+        return cache[name][property]
