@@ -43,13 +43,13 @@ def add_folder_to_zip(zipf, folder_name, base_folder="overrides"):
     for root, _, files in os.walk(folder_name):
         for file in files:
             file_path = os.path.join(root, file)
-            zip_file_path = os.path.join(base_folder, file_path)
+            zip_file_path = file_path
             zipf.write(file_path, zip_file_path)
 
 
-def add_file_to_zip(zipf, file_name, base_folder="overrides"):
+def add_file_to_zip(zipf, file_name):
     file_path = os.path.relpath(file_name)
-    zip_file_path = os.path.join(base_folder, file_path)
+    zip_file_path = file_path
     zipf.write(file_path, zip_file_path)
 
 
@@ -93,9 +93,4 @@ def compile():
     pack_name = f"{modrinth_index["name"].replace(" ", "-")}-{modrinth_index["versionId"].replace(" ", "-")}.mrpack"
     with zipfile.ZipFile(pack_name, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
         zip.writestr("modrinth.index.json", json.dumps(modrinth_index, indent=4))
-        add_folder_to_zip(zip, "config")
-        add_folder_to_zip(zip, "kubejs")
-        add_folder_to_zip(zip, "defaultconfigs")
-        add_folder_to_zip(zip, "resourcepacks")
-        add_folder_to_zip(zip, "shaderpacks")
-        add_file_to_zip(zip, "options.txt")
+        add_folder_to_zip(zip, "overrides")
