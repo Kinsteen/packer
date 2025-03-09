@@ -14,7 +14,9 @@ classifiers = [
 dependencies = [
     "click",
     "requests",
-    "tqdm"
+    "tqdm",
+    "colorama",
+    "readchar"
 ]
 
 [project.optional-dependencies]
