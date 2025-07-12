@@ -7,6 +7,7 @@ import packer.config as config
 import packer.migration
 import packer.services.curseforge as cf
 import packer.services.modrinth as mr
+import packer.services.packwiz as pw
 from packer.log.multi_formatter import MultiFormatter
 
 logger = logging.getLogger(__name__)
@@ -82,3 +83,9 @@ def modrinth():
 @click.argument("url")
 def modrinth_dep(url):
     mr.modrinth_dep(url)
+
+
+@main.command()
+@click.argument("output", type=click.Path())
+def packwiz(output):
+    pw.convert(output)

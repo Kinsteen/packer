@@ -16,7 +16,8 @@ dependencies = [
     "requests",
     "tqdm",
     "colorama",
-    "readchar"
+    "readchar",
+    "tomli-w",
 ]
 
 [project.optional-dependencies]

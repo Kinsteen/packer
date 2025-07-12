@@ -106,12 +106,7 @@ def curseforge_url(url: str):
     session = requests.Session()
     slug = url.split("/")[-3]
     category_slug = url.split("/")[-4]
-    categories = {
-        "mc-mods": 6,
-        "texture-packs": 12,
-        "shaders": 6552,
-    }
-    search_results = session.get(f"https://api.curse.tools/v1/cf/mods/search?gameId=432&classId={categories[category_slug]}&slug={slug}").json()[
+    search_results = session.get(f"https://api.curse.tools/v1/cf/mods/search?gameId=432&classId={cat_to_classid(category_slug)}&slug={slug}").json()[
         "data"
     ]
     if len(search_results) == 0:
