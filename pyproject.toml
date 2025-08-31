@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "modpacker"
-version = "0.0.5"
+version = "0.0.6"
 description = "The best Minecraft modpack creation tool you know"
 readme = "README.md"
 classifiers = [
