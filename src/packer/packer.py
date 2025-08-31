@@ -79,12 +79,15 @@ def curseforge_dep(url: str, latest: bool):
 def modrinth():
     pass
 
-
 @modrinth.command(name="dep")
 @click.argument("url")
 def modrinth_dep(url):
     mr.modrinth_dep(url)
 
+@modrinth.command(name="add")
+@click.argument("slugs", nargs=-1)
+def modrinth_add(slugs):
+    mr.modrinth_add(slugs)
 
 @main.command()
 @click.argument("output", type=click.Path())
