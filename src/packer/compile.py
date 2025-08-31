@@ -7,6 +7,7 @@ from pathlib import Path
 
 import requests
 
+from packer.api import get, post
 from packer.config import get_from_cache, open_config
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,10 @@ def get_sha1(data):
     hash.update(data)
     return hash.hexdigest()
 
+def get_sha256(data):
+    hash = hashlib.sha256()
+    hash.update(data)
+    return hash.hexdigest()
 
 def get_sha512(data):
     hash = hashlib.sha512()
@@ -54,34 +59,57 @@ def add_file_to_zip(zipf, file_name):
     zipf.write(file_path, zip_file_path)
 
 
+def get_path(file):
+    name = file["downloads"][0].split("/")[-1]
+    if "type" not in file:
+        file_type = "MOD"
+    else:
+        file_type = file["type"]
+
+    if file_type == "MOD":
+        return "mods/" + name
+    elif file_type == "RESOURCE_PACK":
+        return "resourcepacks/" + name
+    elif file_type == "SHADER":
+        return "shaderpacks/" + name
+
+def get_slug(file):
+    """Get the slug of a mod from its download URL. Is quite expensive, calls should be cached."""
+    url = file['downloads'][0]
+    if "modrinth.com" in url:
+        project_id = url.split("/")[-4]
+        mod = get(f"https://api.modrinth.com/v2/project/{project_id}")
+        return mod['slug']
+    elif "curse" in url or "forge" in url:
+        file_id = url.split("/")[-3].rjust(4, "0") + url.split("/")[-2].rjust(3, "0")
+        mod_id = post(
+            "https://api.curse.tools/v1/cf/mods/files",
+            {"fileIds": [int(file_id)]},
+        )["data"][
+            0
+        ]["modId"]
+        mod = get(f"https://api.curse.tools/v1/cf/mods/{mod_id}")["data"]
+        return mod['slug']
+
 def compile():
     modrinth_index = open_config()
     for file in modrinth_index["files"]:
         name = file["downloads"][0].split("/")[-1]
 
         # Remove keys that are not modrinth.index.json standard
-        if "type" not in file:
-            file_type = "MOD"
-        else:
-            file_type = file["type"]
+        if "type" in file:
             del file["type"]
 
         if "project_url" in file:
             del file["project_url"]
 
-        if file_type == "MOD":
-            file["path"] = "mods/" + name
-        elif file_type == "RESOURCE_PACK":
-            file["path"] = "resourcepacks/" + name
-        elif file_type == "SHADER":
-            file["path"] = "shaderpacks/" + name
-
-        path = file["path"]
+        path = get_path(file)
         url = file["downloads"][0]
 
-        if "hashes" not in file:
+        if "hashes" not in file or "sha1" not in file["hashes"] or "sha256" not in file["hashes"] or "sha512" not in file["hashes"]:
             file["hashes"] = {}
             file["hashes"]["sha1"] = get_from_cache(path, "sha1", lambda: get_sha1(read_or_download(path, url)))
+            file["hashes"]["sha256"] = get_from_cache(path, "sha256", lambda: get_sha256(read_or_download(path, url)))
             file["hashes"]["sha512"] = get_from_cache(path, "sha512", lambda: get_sha512(read_or_download(path, url)))
 
         if "fileSize" not in file or file["fileSize"] == 0:
