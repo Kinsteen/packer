@@ -2,6 +2,7 @@ import logging
 
 import click
 
+from packer import server
 import packer.compile
 import packer.config as config
 import packer.migration
@@ -89,3 +90,19 @@ def modrinth_dep(url):
 @click.argument("output", type=click.Path())
 def packwiz(output):
     pw.convert(output)
+
+@main.group(name="server")
+def server_cmd():
+    pass
+
+@server_cmd.command(name="export")
+@click.option(
+    "--unsup",
+    type=bool,
+    default=False,
+    is_flag=True,
+    help="Will include unsup files to the server export (default: false)",
+)
+@click.argument("output", type=click.Path())
+def server_export(output, unsup):
+    server.export(output, unsup)

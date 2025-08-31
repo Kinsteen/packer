@@ -28,6 +28,7 @@ def read_or_download(name, url):
     cache_path = Path(".cache/" + name)
 
     if not cache_path.exists():
+        logger.info(f"Downloading {url}")
         remote = requests.get(url)
         if not cache_path.parent.exists():
             os.makedirs(cache_path.parent)
