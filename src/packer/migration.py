@@ -6,7 +6,7 @@ import tqdm
 from packer.api import get, post
 from packer.config import open_config, persist_config
 from packer.log.tqdm_wrapper import tqdm_output
-from packer.services.curseforge import get_project_url
+from packer.services.curseforge import get_project_url as cf_get_project_url
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +15,8 @@ def check_migrations() -> bool:
     config = open_config(silently_fail=True)
 
     if config is not None:
-        # migrate_add_project_url()
         for file in config["files"]:
+            # migrate_add_project_url()
             if "project_url" not in file:
                 return True
 
@@ -48,7 +48,7 @@ def migrate_add_project_url():
                     )["data"][
                         0
                     ]["modId"]
-                    project_url = get_project_url(mod_id)
+                    project_url = cf_get_project_url(mod_id)
                     if project_url is not None:
                         file["project_url"] = project_url
 
