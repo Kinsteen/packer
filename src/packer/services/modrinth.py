@@ -4,7 +4,7 @@ import logging
 import pprint
 
 from packer import cutie
-from packer.config import open_config
+from packer.config import open_config, persist_config
 from packer.api import get
 
 logger = logging.getLogger(__name__)
@@ -113,7 +113,12 @@ def modrinth_add(slugs):
         mod_versions = get(f'https://api.modrinth.com/v2/project/{slug}/version?loaders=["neoforge"]&game_versions=["{minecraft_version}"]')
         logger.info(f"Choose a version for '{mod['title']}':")
         choice = cutie.select(list(map(lambda version: version["name"], mod_versions)), clear_on_confirm=True)
-        print()
         select_version(slug, mod_versions[choice]['id'], chosen_urls, seen_mods=seen_mods)
 
-    logger.info(json.dumps(chosen_urls, indent=4))
+    for new_file in chosen_urls:
+        if new_file not in packer_config['files']:
+            packer_config['files'].append(new_file)
+
+    persist_config(packer_config)
+
+    logger.info("Added mods to config!")
