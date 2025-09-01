@@ -12,6 +12,11 @@ pip install https://github.com/Kinsteen/packer/releases/download/main/modpacker-
 
 Run with `packer`! (you have to have it in path, pip will complain if it's not anyway)
 
+Running the help will show you what you can do with it (`packer --help` and `packer <subcommand> --help`)
+
+### Creating a modpack
+
+
 ## Development
 Simply run:
 ```bash

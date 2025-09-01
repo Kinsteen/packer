@@ -22,7 +22,9 @@ def convert(output_folder):
     for file in packer_config["files"]:
         name = file["downloads"][0].split("/")[-1]
 
-        side = "client" if file["env"]["server"] == "unsupported" else "both"
+        side = "both"
+        if file["env"]["server"] == "unsupported":
+            side = "client"
 
         if "type" not in file:
             file_type = "MOD"
@@ -52,7 +54,7 @@ def convert(output_folder):
             },
         }
         os.makedirs(os.path.join(output_folder, os.path.dirname(file["path"])), exist_ok=True)
-        new_path = os.path.dirname(path) + "/" + slug + ".pw.toml" # no os.path.join because we always want slashes
+        new_path = os.path.dirname(path) + "/" + slug + ".pw.toml"  # no os.path.join because we always want slashes
         with open(os.path.join(output_folder, new_path), "wb") as f:
             tomli_w.dump(filetoml, f)
 

@@ -18,10 +18,12 @@ def get_sha1(data):
     hash.update(data)
     return hash.hexdigest()
 
+
 def get_sha256(data):
     hash = hashlib.sha256()
     hash.update(data)
     return hash.hexdigest()
+
 
 def get_sha512(data):
     hash = hashlib.sha512()
@@ -73,13 +75,14 @@ def get_path(file):
     elif file_type == "SHADER":
         return "shaderpacks/" + name
 
+
 def get_slug(file):
     """Get the slug of a mod from its download URL. Is quite expensive, calls should be cached."""
-    url = file['downloads'][0]
+    url = file["downloads"][0]
     if "modrinth.com" in url:
         project_id = url.split("/")[-4]
         mod = get(f"https://api.modrinth.com/v2/project/{project_id}")
-        return mod['slug']
+        return mod["slug"]
     elif "curse" in url or "forge" in url:
         file_id = url.split("/")[-3].rjust(4, "0") + url.split("/")[-2].rjust(3, "0")
         mod_id = post(
@@ -89,13 +92,12 @@ def get_slug(file):
             0
         ]["modId"]
         mod = get(f"https://api.curse.tools/v1/cf/mods/{mod_id}")["data"]
-        return mod['slug']
+        return mod["slug"]
+
 
 def compile():
     modrinth_index = open_config()
     for file in modrinth_index["files"]:
-        name = file["downloads"][0].split("/")[-1]
-
         # Remove keys that are not modrinth.index.json standard
         if "type" in file:
             del file["type"]

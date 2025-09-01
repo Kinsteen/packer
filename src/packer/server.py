@@ -1,17 +1,19 @@
 import logging
-
 import os
 import shutil
-import requests
 import subprocess
+
+import requests
 import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
-from packer.config import open_config
+
 from packer.compile import read_or_download
+from packer.config import open_config
 
 logger = logging.getLogger(__name__)
 
-def export(output_folder, unsup: bool):
+
+def export(output_folder):
     packer_config = open_config()
     output_folder = os.path.realpath(output_folder)
     if os.path.exists(output_folder):
@@ -30,18 +32,18 @@ def export(output_folder, unsup: bool):
         logger.info("Done!")
 
     with logging_redirect_tqdm():
-        for file in tqdm.tqdm(packer_config['files']):
-            if 'type' not in file or file['type'] == 'MOD':
-                if 'env' in file and file['env']['server'] == 'required':
+        for file in tqdm.tqdm(packer_config["files"]):
+            if "type" not in file or file["type"] == "MOD":
+                if "env" in file and file["env"]["server"] == "required":
                     name = file["downloads"][0].split("/")[-1]
                     path = "mods/" + name
                     os.makedirs(os.path.dirname(os.path.join(output_folder, path)), exist_ok=True)
-                    url = file['downloads'][0]
+                    url = file["downloads"][0]
                     data = read_or_download(path, url)
-                    with open(os.path.join(output_folder, path), 'wb') as f:
+                    with open(os.path.join(output_folder, path), "wb") as f:
                         f.write(data)
 
-    if 'dependencies' in packer_config and 'neoforge' in packer_config['dependencies']:
+    if "dependencies" in packer_config and "neoforge" in packer_config["dependencies"]:
         logger.info(f"Downloaded Neoforge installer in {os.path.join(output_folder, 'neo-installer.jar')}.")
         neoforge_installer = f"https://maven.neoforged.net/releases/net/neoforged/neoforge/{packer_config['dependencies']['neoforge']}/neoforge-{packer_config['dependencies']['neoforge']}-installer.jar"
         installer_data = requests.get(neoforge_installer)
@@ -49,12 +51,13 @@ def export(output_folder, unsup: bool):
             f.write(installer_data.content)
 
         answer = input("Run server installer? y/n ")
-        if answer == 'y':
-            subprocess.Popen(['java', '-jar', os.path.join(output_folder, "neo-installer.jar"), '--install-server'], cwd=output_folder)
+        if answer == "y":
+            subprocess.Popen(["java", "-jar", os.path.join(output_folder, "neo-installer.jar"), "--install-server"], cwd=output_folder)
             logger.info("")
-            answer = input('Delete Neoforge installer? y/n ')
-            if answer == 'y':
+            answer = input("Delete Neoforge installer? y/n ")
+            if answer == "y":
                 os.remove(os.path.join(output_folder, "neo-installer.jar"))
+
 
 #     if unsup:
 #         logger.info("Downloading unsup.jar and creating unsup.ini...")

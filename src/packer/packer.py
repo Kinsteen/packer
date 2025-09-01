@@ -2,13 +2,13 @@ import logging
 
 import click
 
-from packer import server
 import packer.compile
 import packer.config as config
 import packer.migration
 import packer.services.curseforge as cf
 import packer.services.modrinth as mr
 import packer.services.packwiz as pw
+from packer import server
 from packer.log.multi_formatter import MultiFormatter
 
 logger = logging.getLogger(__name__)
@@ -57,55 +57,43 @@ def curseforge():
     pass
 
 
-@curseforge.command(name="url")
+@curseforge.command(name="url", help="Get the download URL from the mod version page URL")
 @click.argument("url")
 def curseforge_url(url: str):
     cf.curseforge_url(url)
 
 
-@curseforge.command(name="dep")
-@click.argument("url")
-@click.option(
-    "--latest",
-    type=bool,
-    default=False,
-    help="Will always use latest files available (default: false)",
-)
-def curseforge_dep(url: str, latest: bool):
-    cf.curseforge_dep(url, latest)
+@curseforge.command(name="add", help="Add mod(s) from Curseforge to the packer config file.")
+@click.option("--save", type=bool, default=False, is_flag=True)
+@click.argument("slugs", nargs=-1)
+def curseforge_add(slugs, save):
+    cf.curseforge_add(slugs, save)
 
 
 @main.group(help="Modrinth helper tools")
 def modrinth():
     pass
 
-@modrinth.command(name="dep")
-@click.argument("url")
-def modrinth_dep(url):
-    mr.modrinth_dep(url)
 
-@modrinth.command(name="add")
+@modrinth.command(name="add", help="Add mod(s) from Modrinth to the packer config file.")
+@click.option("--save", type=bool, default=False, is_flag=True)
 @click.argument("slugs", nargs=-1)
-def modrinth_add(slugs):
-    mr.modrinth_add(slugs)
+def modrinth_add(slugs, save):
+    mr.modrinth_add(slugs, save)
 
-@main.command()
+
+@main.command(help="Export modpack to packwiz format.")
 @click.argument("output", type=click.Path())
 def packwiz(output):
     pw.convert(output)
 
-@main.group(name="server")
+
+@main.group(name="server", help="Server tools")
 def server_cmd():
     pass
 
-@server_cmd.command(name="export")
-@click.option(
-    "--unsup",
-    type=bool,
-    default=False,
-    is_flag=True,
-    help="Will include unsup files to the server export (default: false)",
-)
+
+@server_cmd.command(name="export", help="Export modpack for server (only server files).")
 @click.argument("output", type=click.Path())
-def server_export(output, unsup):
-    server.export(output, unsup)
+def server_export(output):
+    server.export(output)
