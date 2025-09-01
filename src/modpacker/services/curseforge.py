@@ -41,17 +41,31 @@ def mod_and_version_to_dict(mod, version):
         },
     }
 
-    # if mod["project_type"] == "mod":
-    #     pass
-    # elif mod["project_type"] == "resourcepack":
-    #     ret["type"] = "RESOURCE_PACK"
-    # elif mod["project_type"] == "shader":
-    #     ret["type"] = "SHADER"
+    if "Client" in version["gameVersions"]:
+        ret["env"]["server"] = "unsupported"
 
     return ret
 
 
 class CurseforgeProvider(ModProvider):
+
+    def get_mod(self, slug):
+        maybe_mod = get(f"https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=6&slug={slug}")
+        if maybe_mod is None:
+            logger.error(f"Can't find mod '{slug}'.")
+            return None
+        return maybe_mod["data"][0]
+
+    def pick_mod_version(self, mod, minecraft_version, mod_loader, latest=False):
+        mod_versions = get(f"https://api.curse.tools/v1/cf/mods/{mod['id']}/files?gameVersion={minecraft_version}&modLoaderType={mod_loader}")["data"]
+        if not latest:
+            logger.info(f"Choose a version for '{mod['name']}':")
+            choice = cutie.select(list(map(lambda version: version["fileName"], mod_versions)), clear_on_confirm=True)
+        else:
+            choice = 0
+        logger.info(f"Selected version {mod_versions[choice]['displayName']}")
+        return mod_versions[choice]
+
     @staticmethod
     def search_slug(slug):
         return super().search_slug(slug)
@@ -60,8 +74,7 @@ class CurseforgeProvider(ModProvider):
     def get_download_link(slug, version):
         return super().get_download_link(slug, version)
 
-    @staticmethod
-    def resolve_dependencies(mod_id, file_id: str, _current_list=None):
+    def resolve_dependencies(self, mod_id, file_id: str, latest=False, _current_list=None):
         packer_config = open_config()
         minecraft_version = packer_config["dependencies"]["minecraft"]
         if "neoforge" in packer_config["dependencies"]:
@@ -86,7 +99,7 @@ class CurseforgeProvider(ModProvider):
                 continue  # Skip already added mod
 
             should_download = False
-            if dep["relationType"] == 2:  # TODO latest
+            if dep["relationType"] == 2 and not latest:
                 should_download = cutie.prompt_yes_or_no(f"Found optional mod '{dep_mod['name']}' for '{base_mod['name']}'. Download?")
             elif dep["relationType"] == 3:
                 should_download = True
@@ -105,9 +118,12 @@ class CurseforgeProvider(ModProvider):
                         # Optional, we just skip it
                         continue
 
-                choice = cutie.select(list(map(lambda file: file["fileName"], files)))
-                logger.info(f"Chosen {files[choice]['displayName']}")
-                CurseforgeProvider.resolve_dependencies(files[choice]["modId"], files[choice]["id"], _current_list)
+                if latest:
+                    choice = 0
+                else:
+                    choice = cutie.select(list(map(lambda file: file["fileName"], files)))
+                logger.info(f"Selected version {files[choice]['displayName']}")
+                self.resolve_dependencies(files[choice]["modId"], files[choice]["id"], latest, _current_list)
         return _current_list
 
 

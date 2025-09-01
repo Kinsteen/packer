@@ -4,14 +4,19 @@ import re
 
 from modpacker import cutie
 from modpacker.api import get
-from modpacker.config import open_config, persist_config
 from modpacker.services.provider import ModProvider
 
 logger = logging.getLogger(__name__)
 
 
 def mod_and_version_to_dict(mod, version):
-    ret = {"project_url": f"https://modrinth.com/mod/{mod['slug']}", "downloads": [version["files"][0]["url"]], "env": {}}
+    ret = {
+        "slug": mod["slug"],
+        "version_id": version["id"],
+        "project_url": f"https://modrinth.com/mod/{mod['slug']}",
+        "downloads": [version["files"][0]["url"]],
+        "env": {},
+    }
 
     if mod["project_type"] == "mod":
         pass
@@ -44,40 +49,23 @@ def version_text_from_version(version):
 class ModrinthProvider(ModProvider):
     full_version_url_pattern = re.compile(r"https://modrinth.com/mod/([^/]+)/version/([^/]+)")
 
-    def search_slug(slug, loader="neoforge"):
-        packer_config = open_config()
-        minecraft_version = packer_config["dependencies"]["minecraft"]
-        mod = get(f"https://api.modrinth.com/v2/project/{slug}")
-        if mod is None:
-            return None
-        mod_versions = get(f'https://api.modrinth.com/v2/project/{slug}/version?loaders=["{loader}"]&game_versions=["{minecraft_version}"]')
-        logger.info(f"Choose a version for '{mod['title']}':")
-        choice = cutie.select(list(map(lambda version: version["name"], mod_versions)), clear_on_confirm=True)
-        mod_version = mod_versions[choice]
+    def get_mod(self, slug):
+        return get(f"https://api.modrinth.com/v2/project/{slug}")
 
-        ret = {
-            "slug": slug,
-            "version_id": mod_version["id"],
-            "project_url": f"https://modrinth.com/mod/{slug}",
-            "downloads": [ModrinthProvider.get_download_link(slug, mod_version)],
-            "env": {},
-        }
-
-        if mod["client_side"] == "unsupported":
-            ret["env"]["client"] = "unsupported"
+    def pick_mod_version(self, mod, minecraft_version, mod_loader, latest=False):
+        mod_versions = get(
+            f'https://api.modrinth.com/v2/project/{mod["slug"]}/version?loaders=["{mod_loader}"]&game_versions=["{minecraft_version}"]'
+        )
+        if not latest:
+            logger.info(f"Choose a version for '{mod['title']}':")
+            choice = cutie.select(list(map(lambda version: version["name"], mod_versions)), clear_on_confirm=True)
         else:
-            ret["env"]["client"] = "required"
+            choice = 0
+        logger.info(f"Selected version '{version_text_from_version(mod_versions[choice])}'")
+        return mod_versions[choice]
 
-        if mod["server_side"] == "unsupported":
-            ret["env"]["server"] = "unsupported"
-        else:
-            ret["env"]["server"] = "required"
-
-        return ret
-
-    def resolve_dependencies(mod_id, version_id, _current_list=None) -> list[dict]:
+    def resolve_dependencies(self, mod_id, version_id, latest, _current_list=None) -> list[dict]:
         if _current_list is None:
-            print("creating new list")
             _current_list = []
         mod = get(f"https://api.modrinth.com/v2/project/{mod_id}")
         if mod is None:
@@ -108,7 +96,7 @@ class ModrinthProvider(ModProvider):
 
             # No suitable versions has been found, continuing with another dep
             if len(dep_versions) == 0:
-                if dep["dependency_type"] == "required":
+                if dep["dependency_type"] == "required" and not latest:
                     logger.error("Couldn't find any version that fulfill the requirement.")
                     logger.error(
                         f"Mod '{mod['title']}' version '{mod_version['name']}' requires mod '{dep_mod['title']}', but we couldn't find any matching version for our modloader and Minecraft version."
@@ -121,7 +109,7 @@ class ModrinthProvider(ModProvider):
             should_download = False
             if dep["dependency_type"] == "required":
                 should_download = True
-            elif dep["dependency_type"] == "optional":
+            elif dep["dependency_type"] == "optional" and not latest:
                 should_download = cutie.prompt_yes_or_no(f"Found optional mod '{dep_mod['title']}' for '{mod['title']}'. Download?")
 
             if should_download:
@@ -132,7 +120,7 @@ class ModrinthProvider(ModProvider):
                         next_versions.append(dep_version)
                         if dep_version["id"] == dep["version_id"]:
                             break
-                    if len(next_versions) == 0:
+                    if len(next_versions) == 0 and not latest:
                         logger.error("Couldn't find any version that fulfill the requirement.")
                         logger.error(
                             f"Mod '{mod['title']}' version '{mod_version['name']}' requires mod '{dep_mod['title']}' with version ID '{dep['version_id']}', but it wasn't found in the search."
@@ -142,46 +130,28 @@ class ModrinthProvider(ModProvider):
                         )
                         return False
                     elif len(next_versions) == 1:
-                        ModrinthProvider.resolve_dependencies(dep_mod["id"], next_versions[0]["id"], _current_list)
+                        self.resolve_dependencies(dep_mod["id"], next_versions[0]["id"], latest, _current_list)
                     else:  # More than one newer version
-                        logger.info(
-                            f"Mod '{mod['title']}' requires the version '{next_versions[-1]['name']}' for mod '{dep_mod['title']}'. Here are more up to date versions that could work."
-                        )
-                        choice = cutie.select(list(map(version_text_from_version, next_versions)), clear_on_confirm=True)
+                        if not latest:
+                            logger.info(
+                                f"Mod '{mod['title']}' requires the version '{next_versions[-1]['name']}' for mod '{dep_mod['title']}'. Here are more up to date versions that could work."
+                            )
+                            choice = cutie.select(list(map(version_text_from_version, next_versions)), clear_on_confirm=True)
+                        else:
+                            choice = 0
                         logger.info(f"Selected version '{version_text_from_version(next_versions[choice])}'")
-                        ModrinthProvider.resolve_dependencies(dep_mod["id"], next_versions[choice]["id"], _current_list)
+                        self.resolve_dependencies(dep_mod["id"], next_versions[choice]["id"], latest, _current_list)
                 else:
-                    logger.info(
-                        f"Mod '{mod['title']}' requires the mod '{dep_mod['title']}', but doesn't specify the version. Here are the last 5 versions that matches the loaders and the game versions."
-                    )
-                    choice = cutie.select(list(map(version_text_from_version, dep_versions)), clear_on_confirm=True)
+                    if not latest:
+                        logger.info(
+                            f"Mod '{mod['title']}' requires the mod '{dep_mod['title']}', but doesn't specify the version. Here are the last 5 versions that matches the loaders and the game versions."
+                        )
+                        choice = cutie.select(list(map(version_text_from_version, dep_versions)), clear_on_confirm=True)
+                    else:
+                        choice = 0
                     logger.info(f"Selected version '{version_text_from_version(dep_versions[choice])}'")
-                    ModrinthProvider.resolve_dependencies(dep_mod["id"], dep_versions[choice]["id"], _current_list)
+                    self.resolve_dependencies(dep_mod["id"], dep_versions[choice]["id"], latest, _current_list)
         return _current_list
 
     def get_download_link(slug, version):
         return version["files"][0]["url"]
-
-
-def modrinth_add(slugs, save):
-    packer_config = open_config()
-    minecraft_version = packer_config["dependencies"]["minecraft"]
-    chosen_mods = list()
-
-    for slug in slugs:
-        mod = get(f"https://api.modrinth.com/v2/project/{slug}")
-        mod_versions = get(f'https://api.modrinth.com/v2/project/{slug}/version?loaders=["neoforge"]&game_versions=["{minecraft_version}"]')
-        logger.info(f"Choose a version for '{mod['title']}':")
-        choice = cutie.select(list(map(lambda version: version["name"], mod_versions)), clear_on_confirm=True)
-        logger.info(f"Selected version '{version_text_from_version(mod_versions[choice])}'")
-        ModrinthProvider.resolve_dependencies(mod["id"], mod_versions[choice]["id"], _current_list=chosen_mods)
-
-    if save:
-        for new_file in chosen_mods:
-            if new_file not in packer_config["files"]:
-                packer_config["files"].append(new_file)
-
-        persist_config(packer_config)
-        logger.info("Added mods to config!")
-    else:
-        logger.info(json.dumps(chosen_mods, indent=4))

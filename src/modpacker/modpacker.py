@@ -9,6 +9,7 @@ import modpacker.services.curseforge as cf
 import modpacker.services.modrinth as mr
 import modpacker.services.packwiz as pw
 from modpacker import server
+from modpacker.commands.add import add
 from modpacker.log.multi_formatter import MultiFormatter
 
 logger = logging.getLogger(__name__)
@@ -65,9 +66,17 @@ def curseforge_url(url: str):
 
 @curseforge.command(name="add", help="Add mod(s) from Curseforge to the packer config file.")
 @click.option("--save", type=bool, default=False, is_flag=True)
+@click.option(
+    "--latest",
+    type=bool,
+    default=False,
+    is_flag=True,
+    help="Will always pick the latest available version, and will NOT download optional dependencies.",
+)
 @click.argument("slugs", nargs=-1)
-def curseforge_add(slugs, save):
-    cf.curseforge_add(slugs, save)
+def curseforge_add(slugs, save, latest):
+    provider = cf.CurseforgeProvider()
+    add(provider, slugs, save, latest)
 
 
 @main.group(help="Modrinth helper tools")
@@ -77,9 +86,17 @@ def modrinth():
 
 @modrinth.command(name="add", help="Add mod(s) from Modrinth to the packer config file.")
 @click.option("--save", type=bool, default=False, is_flag=True)
+@click.option(
+    "--latest",
+    type=bool,
+    default=False,
+    is_flag=True,
+    help="Will always pick the latest available version, and will NOT download optional dependencies.",
+)
 @click.argument("slugs", nargs=-1)
-def modrinth_add(slugs, save):
-    mr.modrinth_add(slugs, save)
+def modrinth_add(slugs, save, latest):
+    provider = mr.ModrinthProvider()
+    add(provider, slugs, save, latest)
 
 
 @main.command(help="Export modpack to packwiz format.")

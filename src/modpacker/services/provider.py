@@ -4,12 +4,13 @@ logger = logging.getLogger(__name__)
 
 
 class ModProvider:
-    @staticmethod
-    def search_slug(slug: str):
+    def get_mod(self, slug):
         pass
 
-    @staticmethod
-    def resolve_dependencies(mod_id: str, version_id: str, _current_list=None) -> list[dict]:
+    def pick_mod_version(self, mod, minecraft_version, mod_loader, latest=False):
+        pass
+
+    def resolve_dependencies(self, mod_id, version_id, latest=False, _current_list=None) -> list[dict]:
         pass
 
     @staticmethod

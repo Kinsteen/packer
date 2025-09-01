@@ -56,7 +56,7 @@ You can run the formatters + linters:
 
 # OR
 
-isort src
-black src
-ruff check src
+uv run isort src
+uv run black src
+uv run ruff check src
 ```
