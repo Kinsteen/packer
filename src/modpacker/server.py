@@ -7,8 +7,8 @@ import requests
 import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from packer.compile import read_or_download
-from packer.config import open_config
+from modpacker.compile import read_or_download
+from modpacker.config import open_config
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,8 @@ import shutil
 
 import tomli_w
 
-from packer.compile import get_sha256, get_slug, read_or_download
-from packer.config import get_from_cache, open_config
+from modpacker.compile import get_sha256, get_slug, read_or_download
+from modpacker.config import get_from_cache, open_config
 
 logger = logging.getLogger(__name__)
 

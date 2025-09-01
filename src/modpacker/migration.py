@@ -3,10 +3,10 @@ import logging
 
 import tqdm
 
-from packer.api import get, post
-from packer.config import open_config, persist_config
-from packer.log.tqdm_wrapper import tqdm_output
-from packer.services.curseforge import get_project_url as cf_get_project_url
+from modpacker.api import get, post
+from modpacker.config import open_config, persist_config
+from modpacker.log.tqdm_wrapper import tqdm_output
+from modpacker.services.curseforge import get_project_url as cf_get_project_url
 
 logger = logging.getLogger(__name__)
 

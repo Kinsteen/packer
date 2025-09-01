@@ -2,10 +2,10 @@ import json
 import logging
 import re
 
-from packer import cutie
-from packer.api import get
-from packer.config import open_config, persist_config
-from packer.services.provider import ModProvider
+from modpacker import cutie
+from modpacker.api import get
+from modpacker.config import open_config, persist_config
+from modpacker.services.provider import ModProvider
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +135,7 @@ class ModrinthProvider(ModProvider):
                     if len(next_versions) == 0:
                         logger.error("Couldn't find any version that fulfill the requirement.")
                         logger.error(
-                            f"Mod '{mod['title']}' version '{mod_version['name']}' requires mod '{dep_mod['title']}' with version ID '{dep["version_id"]}', but it wasn't found in the search."
+                            f"Mod '{mod['title']}' version '{mod_version['name']}' requires mod '{dep_mod['title']}' with version ID '{dep['version_id']}', but it wasn't found in the search."
                         )
                         logger.error(
                             f"API URL searched: https://api.modrinth.com/v2/project/{dep['project_id']}/version?loaders={loaders}&game_versions={game_versions}"

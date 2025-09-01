@@ -3,10 +3,10 @@ import logging
 
 import requests
 
-import packer.cutie as cutie
-from packer.api import get
-from packer.config import open_config, persist_config
-from packer.services.provider import ModProvider
+import modpacker.cutie as cutie
+from modpacker.api import get
+from modpacker.config import open_config, persist_config
+from modpacker.services.provider import ModProvider
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +145,6 @@ def curseforge_add(slugs: str, save: bool):
         logger.info("Added mods to config!")
     else:
         logger.info(json.dumps(chosen_mods, indent=4))
-
 
 
 def curseforge_url(url: str):

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import requests
 
-from packer.api import get, post
-from packer.config import get_from_cache, open_config
+from modpacker.api import get, post
+from modpacker.config import get_from_cache, open_config
 
 logger = logging.getLogger(__name__)
 

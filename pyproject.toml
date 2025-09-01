@@ -1,12 +1,9 @@
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "modpacker"
 version = "0.0.8"
 description = "The best Minecraft modpack creation tool you know"
 readme = "README.md"
+requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Programming Language :: Python :: 3",
@@ -20,17 +17,21 @@ dependencies = [
     "tomli-w",
 ]
 
-[project.optional-dependencies]
-dev = ["black", "ruff", "isort"]
-
 [project.urls]
 source = "https://github.com/Kinsteen/packer"
 
 [project.scripts]
-packer = "packer.packer:main"
+packer = "modpacker.modpacker:main"
 
 [tool.black]
-target-version = ['py39']
+target-version = ['py311']
 line-length = 150
 
 [tool.ruff]
+
+[tool.uv]
+dev-dependencies = ["black", "ruff", "isort"]
+
+[build-system]
+requires = ["uv_build"]
+build-backend = "uv_build"

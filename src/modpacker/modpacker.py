@@ -2,14 +2,14 @@ import logging
 
 import click
 
-import packer.compile
-import packer.config as config
-import packer.migration
-import packer.services.curseforge as cf
-import packer.services.modrinth as mr
-import packer.services.packwiz as pw
-from packer import server
-from packer.log.multi_formatter import MultiFormatter
+import modpacker.compile
+import modpacker.config as config
+import modpacker.migration
+import modpacker.services.curseforge as cf
+import modpacker.services.modrinth as mr
+import modpacker.services.packwiz as pw
+from modpacker import server
+from modpacker.log.multi_formatter import MultiFormatter
 
 logger = logging.getLogger(__name__)
 
@@ -31,25 +31,25 @@ def main(ctx, verbose):
     config.load_cache()
 
     if ctx.invoked_subcommand != "migrate":
-        if packer.migration.check_migrations():
+        if modpacker.migration.check_migrations():
             logger.info("Migration is recommended!")
             logger.info("Run with `packer migrate`")
 
     if ctx.invoked_subcommand is None:
-        packer.compile.compile()
+        modpacker.compile.compile()
 
 
 @main.command(help="Compile the modpack in the current directory.")
 def compile():
-    packer.compile.compile()
+    modpacker.compile.compile()
 
 
 @main.command(help="Update the packer config if needed!")
 def migrate():
-    if not packer.migration.check_migrations():
+    if not modpacker.migration.check_migrations():
         logger.info("No migration is needed.")
     else:
-        packer.migration.migrate_add_project_url()
+        modpacker.migration.migrate_add_project_url()
 
 
 @main.group(help="Curseforge helper tools")
