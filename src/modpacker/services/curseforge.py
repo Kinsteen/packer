@@ -1,9 +1,9 @@
 import json
 import logging
 
+import questionary
 import requests
 
-import modpacker.cutie as cutie
 from modpacker.api import get
 from modpacker.config import open_config, persist_config
 from modpacker.services.provider import ModProvider
@@ -59,11 +59,11 @@ class CurseforgeProvider(ModProvider):
     def pick_mod_version(self, mod, minecraft_version, mod_loader, latest=False):
         mod_versions = get(f"https://api.curse.tools/v1/cf/mods/{mod['id']}/files?gameVersion={minecraft_version}&modLoaderType={mod_loader}")["data"]
         if not latest:
-            logger.info(f"Choose a version for '{mod['name']}':")
-            choice = cutie.select(list(map(lambda version: version["fileName"], mod_versions)), clear_on_confirm=True)
+            choices = list(map(lambda version: version["fileName"], mod_versions))
+            answer = questionary.select(f"What version for version '{mod['name']}'?", choices).ask()
+            choice = choices.index(answer)
         else:
             choice = 0
-        logger.info(f"Selected version {mod_versions[choice]['displayName']}")
         return mod_versions[choice]
 
     @staticmethod
@@ -100,7 +100,7 @@ class CurseforgeProvider(ModProvider):
 
             should_download = False
             if dep["relationType"] == 2 and not latest:
-                should_download = cutie.prompt_yes_or_no(f"Found optional mod '{dep_mod['name']}' for '{base_mod['name']}'. Download?")
+                should_download = questionary.confirm(f"Found optional mod '{dep_mod['name']}' for '{base_mod['name']}'. Download?", default=False, auto_enter=False).ask()
             elif dep["relationType"] == 3:
                 should_download = True
 
@@ -121,47 +121,11 @@ class CurseforgeProvider(ModProvider):
                 if latest:
                     choice = 0
                 else:
-                    choice = cutie.select(list(map(lambda file: file["fileName"], files)))
-                logger.info(f"Selected version {files[choice]['displayName']}")
+                    choices = list(map(lambda file: file["fileName"], files))
+                    answer = questionary.select(f"What version for version '{dep_mod['name']}'?", choices).ask()
+                    choice = choices.index(answer)
                 self.resolve_dependencies(files[choice]["modId"], files[choice]["id"], latest, _current_list)
         return _current_list
-
-
-def curseforge_add(slugs: str, save: bool):
-    packer_config = open_config()
-    minecraft_version = packer_config["dependencies"]["minecraft"]
-    if "neoforge" in packer_config["dependencies"]:
-        mod_loader = 6
-    elif "fabric" in packer_config["dependencies"]:
-        mod_loader = 4
-    elif "forge" in packer_config["dependencies"]:
-        mod_loader = 1
-
-    if not mod_loader:
-        raise RuntimeError("Can't find modloader in packer config.")
-
-    chosen_mods = list()
-    for slug in slugs:
-        mod = get(f"https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=6&slug={slug}")
-        if mod is None:
-            logger.warning(f"Can't find mod '{slug}'.")
-        mod = mod["data"][0]
-        mod_versions = get(f"https://api.curse.tools/v1/cf/mods/{mod['id']}/files?gameVersion={minecraft_version}&modLoaderType={mod_loader}")["data"]
-        logger.info(f"Choose a version for '{mod['name']}':")
-        choice = cutie.select(list(map(lambda version: version["fileName"], mod_versions)), clear_on_confirm=True)
-        logger.info(f"Selected version '{mod_versions[choice]['fileName']}'")
-        CurseforgeProvider.resolve_dependencies(mod["id"], mod_versions[choice]["id"], _current_list=chosen_mods)
-
-    if save:
-        for new_file in chosen_mods:
-            if new_file not in packer_config["files"]:
-                packer_config["files"].append(new_file)
-
-        persist_config(packer_config)
-        logger.info("Added mods to config!")
-    else:
-        logger.info(json.dumps(chosen_mods, indent=4))
-
 
 def curseforge_url(url: str):
     session = requests.Session()

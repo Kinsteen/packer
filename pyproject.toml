@@ -12,9 +12,8 @@ dependencies = [
     "click",
     "requests",
     "tqdm",
-    "colorama",
-    "readchar",
     "tomli-w",
+    "questionary>=2.1.1",
 ]
 
 [project.urls]

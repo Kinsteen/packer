@@ -31,6 +31,12 @@ def main(ctx, verbose):
 
     config.load_cache()
 
+
+    c = config.open_config(silently_fail=True)
+    if c is None:
+        logger.error(f"Can't find a 'packer_config.json' in the current directory.")
+        exit(1)
+
     if ctx.invoked_subcommand != "migrate":
         if modpacker.migration.check_migrations():
             logger.info("Migration is recommended!")

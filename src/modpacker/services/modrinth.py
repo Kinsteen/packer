@@ -2,7 +2,8 @@ import json
 import logging
 import re
 
-from modpacker import cutie
+import questionary
+
 from modpacker.api import get
 from modpacker.services.provider import ModProvider
 
@@ -57,11 +58,11 @@ class ModrinthProvider(ModProvider):
             f'https://api.modrinth.com/v2/project/{mod["slug"]}/version?loaders=["{mod_loader}"]&game_versions=["{minecraft_version}"]'
         )
         if not latest:
-            logger.info(f"Choose a version for '{mod['title']}':")
-            choice = cutie.select(list(map(lambda version: version["name"], mod_versions)), clear_on_confirm=True)
+            choices = list(map(lambda version: version["name"], mod_versions))
+            answer = questionary.select(f"What version for version '{mod['title']}'?", choices).ask()
+            choice = choices.index(answer)
         else:
             choice = 0
-        logger.info(f"Selected version '{version_text_from_version(mod_versions[choice])}'")
         return mod_versions[choice]
 
     def resolve_dependencies(self, mod_id, version_id, latest, _current_list=None) -> list[dict]:
@@ -110,13 +111,13 @@ class ModrinthProvider(ModProvider):
             if dep["dependency_type"] == "required":
                 should_download = True
             elif dep["dependency_type"] == "optional" and not latest:
-                should_download = cutie.prompt_yes_or_no(f"Found optional mod '{dep_mod['title']}' for '{mod['title']}'. Download?")
+                should_download = questionary.confirm(f"Found optional mod '{dep_mod['title']}' for '{mod['title']}'. Download?", default=False, auto_enter=False).ask()
 
             if should_download:
                 if dep["version_id"] is not None:
                     # Fetch all versions that are later or equal to the version required.
                     next_versions = []
-                    for dep_version in dep_versions:
+                    for dep_version in dep_versions: # Isn't this wrong? inverted. we should skip until ==, and then add to next_versions no?
                         next_versions.append(dep_version)
                         if dep_version["id"] == dep["version_id"]:
                             break
@@ -133,23 +134,23 @@ class ModrinthProvider(ModProvider):
                         self.resolve_dependencies(dep_mod["id"], next_versions[0]["id"], latest, _current_list)
                     else:  # More than one newer version
                         if not latest:
-                            logger.info(
-                                f"Mod '{mod['title']}' requires the version '{next_versions[-1]['name']}' for mod '{dep_mod['title']}'. Here are more up to date versions that could work."
-                            )
-                            choice = cutie.select(list(map(version_text_from_version, next_versions)), clear_on_confirm=True)
+                            choices = list(map(version_text_from_version, next_versions))
+                            answer = questionary.select(
+                                f"Mod '{mod['title']}' requires the version '{next_versions[-1]['name']}' for mod '{dep_mod['title']}'. Here are more up to date versions that could work, pick the last for the explicit version:",
+                                choices,
+                            ).ask()
+                            choice = choices.index(answer)
                         else:
                             choice = 0
                         logger.info(f"Selected version '{version_text_from_version(next_versions[choice])}'")
                         self.resolve_dependencies(dep_mod["id"], next_versions[choice]["id"], latest, _current_list)
                 else:
                     if not latest:
-                        logger.info(
-                            f"Mod '{mod['title']}' requires the mod '{dep_mod['title']}', but doesn't specify the version. Here are the last 5 versions that matches the loaders and the game versions."
-                        )
-                        choice = cutie.select(list(map(version_text_from_version, dep_versions)), clear_on_confirm=True)
+                        choices = list(map(version_text_from_version, dep_versions))
+                        answer = questionary.select(f"Mod '{mod['title']}' requires the mod '{dep_mod['title']}'. Which version?", choices).ask()
+                        choice = choices.index(answer)
                     else:
                         choice = 0
-                    logger.info(f"Selected version '{version_text_from_version(dep_versions[choice])}'")
                     self.resolve_dependencies(dep_mod["id"], dep_versions[choice]["id"], latest, _current_list)
         return _current_list
 
