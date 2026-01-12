@@ -21,13 +21,22 @@ def add(provider: ModProvider, slugs, save, latest):
 
     for slug in slugs:
         mod = provider.get_mod(slug)
+        if mod is None:
+            continue
         mod_version = provider.pick_mod_version(mod, minecraft_version, mod_loader, latest)
         provider.resolve_dependencies(mod["id"], mod_version["id"], latest, _current_list=chosen_mods)
 
     if save:
         for new_file in chosen_mods:
-            if new_file not in packer_config["files"]:
-                packer_config["files"].append(new_file)
+            added = False
+            for idx, mod in enumerate(packer_config["files"]):
+                if new_file["slug"] == mod["slug"]:
+                    print("Mod already exists in the pack!")
+                    packer_config["files"][idx] = new_file
+                    added = True
+            if not added:
+                if new_file not in packer_config["files"]:
+                    packer_config["files"].append(new_file)
 
         persist_config(packer_config)
         logger.info("Added mods to config!")

@@ -51,7 +51,7 @@ class CurseforgeProvider(ModProvider):
 
     def get_mod(self, slug):
         maybe_mod = get(f"https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=6&slug={slug}")
-        if maybe_mod is None:
+        if maybe_mod is None or len(maybe_mod["data"]) == 0:
             logger.error(f"Can't find mod '{slug}'.")
             return None
         return maybe_mod["data"][0]
