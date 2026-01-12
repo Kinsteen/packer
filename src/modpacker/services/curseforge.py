@@ -1,11 +1,10 @@
-import json
 import logging
 
 import questionary
 import requests
 
 from modpacker.api import get
-from modpacker.config import open_config, persist_config
+from modpacker.config import open_config
 from modpacker.services.provider import ModProvider
 
 logger = logging.getLogger(__name__)

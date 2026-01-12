@@ -103,24 +103,23 @@ preset=minecraft
 source_format=packwiz
 source={source}
 """
-    unsup_content = unsup_ini.format(source=config["unsup"]["source"])
-    if "signature" in config["unsup"]:
-        unsup_content += "public_key=" + config["unsup"]["signature"]
+    unsup_content = unsup_ini.format(source=config["source"])
+    if "signature" in config:
+        unsup_content += "public_key=" + config["signature"]
     return unsup_content.strip()
 
 def compile():
     modrinth_index = open_config()
 
+    unsup_config = None
     if "unsup" in modrinth_index:
-        del modrinth_index["unsup"]
+        unsup_config = modrinth_index["unsup"]
 
     for file in modrinth_index["files"]:
         # Remove keys that are not modrinth.index.json standard
-        if "type" in file:
-            del file["type"]
-
-        if "project_url" in file:
-            del file["project_url"]
+        for key in ["type", "slug", "project_url", "version_id"]:
+            if key in file:
+                del file[key]
 
         path = get_path(file)
         file["path"] = path
@@ -144,6 +143,6 @@ def compile():
         zip.writestr("modrinth.index.json", json.dumps(modrinth_index, indent=4))
         add_folder_to_zip(zip, "overrides")
 
-        if "unsup" in modrinth_index:
+        if unsup_config:
             logger.info("Generating unsup.ini...")
-            zip.writestr("overrides/unsup.ini", unsup_ini_content(modrinth_index))
+            zip.writestr("overrides/unsup.ini", unsup_ini_content(unsup_config))

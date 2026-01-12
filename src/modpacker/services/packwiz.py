@@ -98,7 +98,7 @@ def convert(output_folder):
 
         # Create unsup.ini
         with open(os.path.join(output_folder, "unsup.ini"), "w") as f:
-            f.write(unsup_ini_content(packer_config))
+            f.write(unsup_ini_content(packer_config["unsup"]))
 
         with open(os.path.join(output_folder, "unsup.toml"), "w") as f:
             f.write("[features]\n")

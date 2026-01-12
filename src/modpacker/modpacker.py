@@ -34,7 +34,7 @@ def main(ctx, verbose):
 
     c = config.open_config(silently_fail=True)
     if c is None:
-        logger.error(f"Can't find a 'packer_config.json' in the current directory.")
+        logger.error("Can't find a 'packer_config.json' in the current directory.")
         exit(1)
 
     if modpacker.migration.check_migrations():
