@@ -32,8 +32,8 @@ def export(output_folder):
                 destination = os.path.relpath(path, "overrides/")
                 os.makedirs(os.path.dirname(os.path.join(output_folder, destination)), exist_ok=True)
                 shutil.copy(os.path.join(root, file), os.path.join(output_folder, destination))
-        logger.info("Done!")
 
+    logger.info("Copying mods...")
     with logging_redirect_tqdm():
         for file in tqdm.tqdm(packer_config["files"]):
             if "type" not in file or file["type"] == "MOD":
@@ -47,19 +47,23 @@ def export(output_folder):
                         f.write(data)
 
     if "dependencies" in packer_config and "neoforge" in packer_config["dependencies"]:
-        logger.info(f"Downloaded Neoforge installer in {os.path.join(output_folder, 'neo-installer.jar')}.")
+        logger.info("Neoforge detected. Downloading installer...")
         neoforge_installer = f"https://maven.neoforged.net/releases/net/neoforged/neoforge/{packer_config['dependencies']['neoforge']}/neoforge-{packer_config['dependencies']['neoforge']}-installer.jar"
         installer_data = requests.get(neoforge_installer)
         with open(os.path.join(output_folder, "neo-installer.jar"), "wb") as f:
             f.write(installer_data.content)
+        logger.info(f"Downloaded Neoforge installer in {os.path.join(output_folder, 'neo-installer.jar')}.")
 
         answer = questionary.confirm("Run server installer?").ask()
         if answer:
             installer_process = subprocess.Popen(["java", "-jar", os.path.join(output_folder, "neo-installer.jar"), "--install-server"], cwd=output_folder)
-            installer_process.wait()
-            answer = questionary.confirm("Delete Neoforge installer?").ask()
-            if answer:
-                os.remove(os.path.join(output_folder, "neo-installer.jar"))
+            code = installer_process.wait()
+            if code == 0:
+                answer = questionary.confirm("Delete Neoforge installer?").ask()
+                if answer:
+                    os.remove(os.path.join(output_folder, "neo-installer.jar"))
+            else:
+                logger.error("Neoforge installer encountered an error.")
 
 
     if "unsup" in packer_config:
