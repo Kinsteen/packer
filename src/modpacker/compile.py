@@ -95,14 +95,6 @@ def get_slug(file):
         return mod["slug"]
 
 
-unsup_ini = """
-version=1
-preset=minecraft
-
-source_format=packwiz
-source={source}
-"""
-
 def unsup_ini_content(config):
     unsup_ini = """
 version=1
@@ -118,6 +110,10 @@ source={source}
 
 def compile():
     modrinth_index = open_config()
+
+    if "unsup" in modrinth_index:
+        del modrinth_index["unsup"]
+
     for file in modrinth_index["files"]:
         # Remove keys that are not modrinth.index.json standard
         if "type" in file:
