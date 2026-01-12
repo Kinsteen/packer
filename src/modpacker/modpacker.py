@@ -10,6 +10,7 @@ import modpacker.services.modrinth as mr
 import modpacker.services.packwiz as pw
 from modpacker import server
 from modpacker.commands.add import add
+from modpacker.commands.update import update as update_exec
 from modpacker.log.multi_formatter import MultiFormatter
 
 logger = logging.getLogger(__name__)
@@ -120,3 +121,8 @@ def server_cmd():
 @click.argument("output", type=click.Path())
 def server_export(output):
     server.export(output)
+
+
+@main.command(help="Update all mods.")
+def update():
+    update_exec()

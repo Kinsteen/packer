@@ -6,8 +6,9 @@ import tqdm
 from modpacker.api import get, post
 from modpacker.config import open_config, persist_config
 from modpacker.log.tqdm_wrapper import tqdm_output
+from modpacker.services.curseforge import \
+    get_project_slug as cf_get_project_slug
 from modpacker.services.curseforge import get_project_url as cf_get_project_url
-from modpacker.services.curseforge import get_project_slug as cf_get_project_slug
 
 logger = logging.getLogger(__name__)
 

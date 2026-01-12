@@ -6,7 +6,8 @@ import zipfile
 
 import tomli_w
 
-from modpacker.compile import get_sha256, get_slug, read_or_download, unsup_ini_content
+from modpacker.compile import (get_sha256, get_slug, read_or_download,
+                               unsup_ini_content)
 from modpacker.config import get_from_cache, open_config
 
 logger = logging.getLogger(__name__)
