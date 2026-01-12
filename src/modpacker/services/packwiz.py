@@ -2,10 +2,11 @@ import hashlib
 import logging
 import os
 import shutil
+import zipfile
 
 import tomli_w
 
-from modpacker.compile import get_sha256, get_slug, read_or_download
+from modpacker.compile import get_sha256, get_slug, read_or_download, unsup_ini_content
 from modpacker.config import get_from_cache, open_config
 
 logger = logging.getLogger(__name__)
@@ -79,6 +80,29 @@ def convert(output_folder):
                 with open(os.path.join(output_folder, destination), "rb") as f:
                     indextoml["files"].append({"file": destination.replace("\\", "/"), "hash": hashlib.sha256(f.read()).hexdigest()})
 
+    if "unsup" in packer_config:
+        # Create compressed metafiles
+        try:
+            import brotli
+            logger.info("Creating unsup-metafiles.zip.br...")
+            with zipfile.ZipFile(os.path.join(output_folder, "unsup-metafiles.zip"), "w") as zip:
+                for f in indextoml["files"]:
+                    if "metafile" in f and f["metafile"]:
+                        zip.write(os.path.join(output_folder, f["file"]), f["file"])
+            with open(os.path.join(output_folder, "unsup-metafiles.zip"), "rb") as zip:
+                with open(os.path.join(output_folder, "unsup-metafiles.zip.br"), "wb") as zip_br:
+                    zip_br.write(brotli.compress(zip.read()))
+        except Exception as e:
+            logger.warning(f"Couldn't create unsup-metafiles.zip.br: {e}")
+
+        # Create unsup.ini
+        with open(os.path.join(output_folder, "unsup.ini"), "w") as f:
+            f.write(unsup_ini_content(packer_config))
+
+        with open(os.path.join(output_folder, "unsup.toml"), "w") as f:
+            f.write("[features]\n")
+            f.write("metafiles_zip = true\n")
+
     with open(os.path.join(output_folder, "index.toml"), "wb") as f:
         tomli_w.dump(indextoml, f)
     with open(os.path.join(output_folder, "index.toml"), "rb") as f:
@@ -94,6 +118,9 @@ def convert(output_folder):
 
     for dep in packer_config["dependencies"]:
         packtoml["versions"][dep] = packer_config["dependencies"][dep]
+
+    if "unsup" in packer_config:
+        packtoml["versions"]["unsup"] = packer_config["unsup"]["version"]
 
     with open(os.path.join(output_folder, "pack.toml"), "wb") as f:
         tomli_w.dump(packtoml, f)

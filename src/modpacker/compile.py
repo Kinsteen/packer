@@ -95,6 +95,27 @@ def get_slug(file):
         return mod["slug"]
 
 
+unsup_ini = """
+version=1
+preset=minecraft
+
+source_format=packwiz
+source={source}
+"""
+
+def unsup_ini_content(config):
+    unsup_ini = """
+version=1
+preset=minecraft
+
+source_format=packwiz
+source={source}
+"""
+    unsup_content = unsup_ini.format(source=config["unsup"]["source"])
+    if "signature" in config["unsup"]:
+        unsup_content += "public_key=" + config["unsup"]["signature"]
+    return unsup_content.strip()
+
 def compile():
     modrinth_index = open_config()
     for file in modrinth_index["files"]:
@@ -106,6 +127,7 @@ def compile():
             del file["project_url"]
 
         path = get_path(file)
+        file["path"] = path
         url = file["downloads"][0]
 
         if "hashes" not in file or "sha1" not in file["hashes"] or "sha256" not in file["hashes"] or "sha512" not in file["hashes"]:
@@ -125,3 +147,7 @@ def compile():
     with zipfile.ZipFile(pack_name, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
         zip.writestr("modrinth.index.json", json.dumps(modrinth_index, indent=4))
         add_folder_to_zip(zip, "overrides")
+
+        if "unsup" in modrinth_index:
+            logger.info("Generating unsup.ini...")
+            zip.writestr("overrides/unsup.ini", unsup_ini_content(modrinth_index))

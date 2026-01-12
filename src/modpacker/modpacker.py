@@ -31,16 +31,15 @@ def main(ctx, verbose):
 
     config.load_cache()
 
-
     c = config.open_config(silently_fail=True)
     if c is None:
         logger.error(f"Can't find a 'packer_config.json' in the current directory.")
         exit(1)
 
-    if ctx.invoked_subcommand != "migrate":
-        if modpacker.migration.check_migrations():
-            logger.info("Migration is recommended!")
-            logger.info("Run with `packer migrate`")
+    if modpacker.migration.check_migrations():
+        logger.info("Running migrations...")
+        modpacker.migration.migrate_add_project_url()
+        logger.info("Done!")
 
     if ctx.invoked_subcommand is None:
         modpacker.compile.compile()
@@ -51,26 +50,22 @@ def compile():
     modpacker.compile.compile()
 
 
-@main.command(help="Update the packer config if needed!")
-def migrate():
-    if not modpacker.migration.check_migrations():
-        logger.info("No migration is needed.")
-    else:
-        modpacker.migration.migrate_add_project_url()
-
-
 @main.group(help="Curseforge helper tools")
 def curseforge():
     pass
 
 
-@curseforge.command(name="url", help="Get the download URL from the mod version page URL")
+@curseforge.command(
+    name="url", help="Get the download URL from the mod version page URL"
+)
 @click.argument("url")
 def curseforge_url(url: str):
     cf.curseforge_url(url)
 
 
-@curseforge.command(name="add", help="Add mod(s) from Curseforge to the packer config file.")
+@curseforge.command(
+    name="add", help="Add mod(s) from Curseforge to the packer config file."
+)
 @click.option("--save", type=bool, default=False, is_flag=True)
 @click.option(
     "--latest",
@@ -90,7 +85,9 @@ def modrinth():
     pass
 
 
-@modrinth.command(name="add", help="Add mod(s) from Modrinth to the packer config file.")
+@modrinth.command(
+    name="add", help="Add mod(s) from Modrinth to the packer config file."
+)
 @click.option("--save", type=bool, default=False, is_flag=True)
 @click.option(
     "--latest",
@@ -116,7 +113,9 @@ def server_cmd():
     pass
 
 
-@server_cmd.command(name="export", help="Export modpack for server (only server files).")
+@server_cmd.command(
+    name="export", help="Export modpack for server (only server files)."
+)
 @click.argument("output", type=click.Path())
 def server_export(output):
     server.export(output)

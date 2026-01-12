@@ -59,7 +59,7 @@ class ModrinthProvider(ModProvider):
         )
         if not latest:
             choices = list(map(lambda version: version["name"], mod_versions))
-            answer = questionary.select(f"What version for version '{mod['title']}'?", choices).ask()
+            answer = questionary.select(f"What version for '{mod['title']}'?", choices).ask()
             choice = choices.index(answer)
         else:
             choice = 0
