@@ -3,11 +3,12 @@ import os
 import shutil
 import subprocess
 
+import questionary
 import requests
 import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from modpacker.compile import read_or_download
+from modpacker.compile import read_or_download, unsup_ini_content
 from modpacker.config import open_config
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,9 @@ def export(output_folder):
     packer_config = open_config()
     output_folder = os.path.realpath(output_folder)
     if os.path.exists(output_folder):
-        input(f"This will delete {os.path.realpath(output_folder)}! Press enter to continue, Ctrl-C to cancel.")
+        answer = questionary.confirm(f"This will delete {os.path.realpath(output_folder)}! Do you want to continue?").ask()
+        if not answer:
+            return
         shutil.rmtree(output_folder)
     os.makedirs(output_folder)
 
@@ -50,30 +53,30 @@ def export(output_folder):
         with open(os.path.join(output_folder, "neo-installer.jar"), "wb") as f:
             f.write(installer_data.content)
 
-        answer = input("Run server installer? y/n ")
-        if answer == "y":
-            subprocess.Popen(["java", "-jar", os.path.join(output_folder, "neo-installer.jar"), "--install-server"], cwd=output_folder)
-            logger.info("")
-            answer = input("Delete Neoforge installer? y/n ")
-            if answer == "y":
+        answer = questionary.confirm("Run server installer?").ask()
+        if answer:
+            installer_process = subprocess.Popen(["java", "-jar", os.path.join(output_folder, "neo-installer.jar"), "--install-server"], cwd=output_folder)
+            installer_process.wait()
+            answer = questionary.confirm("Delete Neoforge installer?").ask()
+            if answer:
                 os.remove(os.path.join(output_folder, "neo-installer.jar"))
 
 
-#     if unsup:
-#         logger.info("Downloading unsup.jar and creating unsup.ini...")
-#         latest_release = requests.get("https://git.sleeping.town/api/v1/repos/unascribed/unsup/releases/latest").json()
-#         for asset in latest_release['assets']:
-#             if asset['name'].endswith('.jar'):
-#                 unsup_jar = requests.get(asset['browser_download_url'])
-#                 with open(os.path.join(output_folder, 'unsup.jar'), "wb") as f:
-#                     f.write(unsup_jar.content)
+    if "unsup" in packer_config:
+        logger.info("Downloading unsup.jar and creating unsup.ini...")
+        latest_release = requests.get(f"https://git.sleeping.town/api/v1/repos/unascribed/unsup/releases/tags/v{packer_config['unsup']['version']}").json()
+        for asset in latest_release['assets']:
+            if asset['name'].endswith('.jar'):
+                unsup_jar = requests.get(asset['browser_download_url'])
+                with open(os.path.join(output_folder, 'unsup.jar'), "wb") as f:
+                    f.write(unsup_jar.content)
 
-#         with open(os.path.join(output_folder, 'unsup.ini'), "w") as f:
-#             f.write("""\
-# version=1
-# preset=minecraft
-# source_format=packwiz
-# source=<pack.toml url>
-# """)
-#         logger.info("You can now update the unsup.ini with the correct pack URL.")
-#         logger.info("You should also add `-javaagent:unsup.jar` to the user JVM args (usually in user_jvm_args.txt)")
+        with open(os.path.join(output_folder, 'unsup.ini'), "w") as f:
+            f.write(unsup_ini_content(packer_config["unsup"]))
+        
+        if os.path.exists(os.path.join(output_folder, 'user_jvm_args.txt')):
+            with open(os.path.join(output_folder, 'user_jvm_args.txt'), 'a') as f:
+                f.write("\n-javaagent:unsup.jar")
+            logger.info("Added `-javaagent:unsup.jar` to user_jvm_args.txt, you can start the server normally!")    
+        else:
+            logger.info("You should add `-javaagent:unsup.jar` to the server start command.")
