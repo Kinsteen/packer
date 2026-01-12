@@ -39,6 +39,7 @@ def main(ctx, verbose):
     if modpacker.migration.check_migrations():
         logger.info("Running migrations...")
         modpacker.migration.migrate_add_project_url()
+        modpacker.migration.migrate_add_slug()
         logger.info("Done!")
 
     if ctx.invoked_subcommand is None:

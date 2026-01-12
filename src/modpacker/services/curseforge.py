@@ -157,3 +157,7 @@ def get_project_url(mod_id):
         return f"https://www.curseforge.com/minecraft/{classid_to_cat(mod['classId'])}/{mod['slug']}"
     except Exception:
         return None
+
+def get_project_slug(mod_id):
+    mod = get(f"https://api.curse.tools/v1/cf/mods/{mod_id}")["data"]
+    return mod['slug']

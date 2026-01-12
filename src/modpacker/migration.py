@@ -7,6 +7,7 @@ from modpacker.api import get, post
 from modpacker.config import open_config, persist_config
 from modpacker.log.tqdm_wrapper import tqdm_output
 from modpacker.services.curseforge import get_project_url as cf_get_project_url
+from modpacker.services.curseforge import get_project_slug as cf_get_project_slug
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +20,11 @@ def check_migrations() -> bool:
             # migrate_add_project_url()
             if "project_url" not in file:
                 return True
+            if "slug" not in file:
+                return True
 
 
 def migrate_add_project_url():
-    logger.info("Migration in progress...")
     config = open_config()
 
     def on_exit():
@@ -54,4 +56,35 @@ def migrate_add_project_url():
 
     persist_config(config)
     atexit.unregister(on_exit)
-    logger.info("Migration is done!")
+
+def migrate_add_slug():
+    config = open_config()
+
+    def on_exit():
+        persist_config(config)
+
+    atexit.register(on_exit)
+
+    with tqdm_output(tqdm.tqdm(config["files"], miniters=5)) as progress_bar:
+        for file in progress_bar:
+            if "slug" not in file:
+                dl_url = file["downloads"][0]
+                if "modrinth" in dl_url:
+                    project_id = dl_url.split("/")[-4]
+                    ret = get(f"https://api.modrinth.com/v2/project/{project_id}")
+                    if ret is not None:
+                        file["slug"] = ret["slug"]
+                else:
+                    file_id = dl_url.split("/")[-3].rjust(4, "0") + dl_url.split("/")[-2].rjust(3, "0")
+                    mod_id = post(
+                        "https://api.curse.tools/v1/cf/mods/files",
+                        {"fileIds": [int(file_id)]},
+                    )["data"][
+                        0
+                    ]["modId"]
+                    project_slug = cf_get_project_slug(mod_id)
+                    if project_slug is not None:
+                        file["slug"] = project_slug
+
+    persist_config(config)
+    atexit.unregister(on_exit)
