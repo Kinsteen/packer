@@ -47,12 +47,15 @@ def read_or_download(name, url):
             return f.read()
 
 
-def add_folder_to_zip(zipf, folder_name, base_folder="overrides"):
+def add_folder_to_zip(zipf: zipfile.ZipFile, folder_name, base_folder="overrides"):
     for root, _, files in os.walk(folder_name):
         for file in files:
-            file_path = os.path.join(root, file)
+            file_path = root + "/" + file
             zip_file_path = file_path
-            zipf.write(file_path, zip_file_path)
+            if zip_file_path not in zipf.NameToInfo: # We don't want to have duplicate files
+                zipf.write(file_path, zip_file_path)
+            else:
+                logger.warning(f"It seems like there is already '{zip_file_path}' in the created zipfile. This can happen if you're trying to override a generated file. Don't do that!")
 
 
 def add_file_to_zip(zipf, file_name):
@@ -141,8 +144,8 @@ def compile():
     pack_name = f"{modrinth_index['name'].replace(' ', '-')}-{modrinth_index['versionId'].replace(' ', '-')}.mrpack"
     with zipfile.ZipFile(pack_name, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
         zip.writestr("modrinth.index.json", json.dumps(modrinth_index, indent=4))
-        add_folder_to_zip(zip, "overrides")
-
         if unsup_config:
             logger.info("Generating unsup.ini...")
             zip.writestr("overrides/unsup.ini", unsup_ini_content(unsup_config))
+
+        add_folder_to_zip(zip, "overrides")
