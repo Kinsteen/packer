@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def check_migrations() -> bool:
-    config = open_config(silently_fail=True)
+    config = open_config()
 
     if config is not None:
         for file in config["files"]:

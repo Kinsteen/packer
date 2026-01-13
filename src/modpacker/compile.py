@@ -111,12 +111,65 @@ source={source}
         unsup_content += "public_key=" + config["signature"]
     return unsup_content.strip()
 
-def compile():
+def get_recommended_lwjgl(minecraft_version: str):
+    r = requests.get("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json").json()
+    for version in r["versions"]:
+        if version["id"] == minecraft_version:
+            version_meta = requests.get(version["url"]).json()
+            for lib in version_meta["libraries"]:
+                if "org.lwjgl:lwjgl-glfw" in lib["name"]:
+                    return lib["name"].split(":")[2]
+
+
+def compile_prism(packer_config):
+    pack_name = f"{packer_config['name'].replace(' ', '-')}-{packer_config['versionId'].replace(' ', '-')}-prism.zip"
+
+    mmc_pack = {
+        "formatVersion": 1,
+        "components": [
+            {
+                "uid": "org.lwjgl3",
+                "version": get_recommended_lwjgl(packer_config["dependencies"]["minecraft"])
+            },
+            {
+                "uid": "net.minecraft",
+                "version": packer_config["dependencies"]["minecraft"]
+            },
+            {
+                "uid": "net.neoforged",
+                "version": packer_config["dependencies"]["neoforge"]
+            },
+            {
+                "uid": "com.unascribed.unsup",
+                "version": packer_config["unsup"]["version"]
+            }
+        ],
+    }
+
+    unsup_latest_release = requests.get(f"https://git.sleeping.town/api/v1/repos/unascribed/unsup/releases/tags/v{packer_config['unsup']['version']}").json()
+    for asset in unsup_latest_release['assets']:
+        if asset['name'] == "com.unascribed.unsup.json":
+            unsup_patch = requests.get(asset['browser_download_url']).content
+
+    with zipfile.ZipFile(pack_name, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
+        zip.writestr("instance.cfg", "")
+        zip.writestr("minecraft/unsup.ini", unsup_ini_content(packer_config["unsup"]))
+        zip.writestr("mmc-pack.json", json.dumps(mmc_pack, indent=4))
+        zip.writestr("patches/com.unascribed.unsup.json", unsup_patch)
+
+def compile(prism = False):
     packer_config = open_config()
 
     unsup_config = None
     if "unsup" in packer_config:
         unsup_config = packer_config["unsup"]
+
+    if prism:
+        if unsup_config:
+            return compile_prism(packer_config)
+        else:
+            logger.error("Prism export only works if unsup is set in packer_config.json.")
+            exit(1)
 
     for file in packer_config["files"]:
         # Remove keys that are not modrinth.index.json standard

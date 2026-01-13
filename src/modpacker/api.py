@@ -23,11 +23,7 @@ def get(url: str) -> dict:
 def post(url: str, data: dict) -> dict:
     r = session.post(
         url,
-        data=json.dumps(data),
-        headers={
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        },
+        json=data
     )
     try:
         return r.json()

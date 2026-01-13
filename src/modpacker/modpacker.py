@@ -59,8 +59,9 @@ def main(ctx, verbose):
 
 
 @main.command(help="Compile the modpack in the current directory.")
-def compile():
-    modpacker.compile.compile()
+@click.option("--prism", default=False, is_flag=True)
+def compile(prism):
+    modpacker.compile.compile(prism)
 
 
 @main.group(help="Curseforge helper tools")
