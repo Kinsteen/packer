@@ -48,7 +48,8 @@ def export(output_folder):
 
     if "dependencies" in packer_config and "neoforge" in packer_config["dependencies"]:
         logger.info("Neoforge detected. Downloading installer...")
-        neoforge_installer = f"https://maven.neoforged.net/releases/net/neoforged/neoforge/{packer_config['dependencies']['neoforge']}/neoforge-{packer_config['dependencies']['neoforge']}-installer.jar"
+        neoforge_version = packer_config['dependencies']['neoforge']
+        neoforge_installer = f"https://maven.neoforged.net/releases/net/neoforged/neoforge/{neoforge_version}/neoforge-{neoforge_version}-installer.jar"
         installer_data = requests.get(neoforge_installer)
         with open(os.path.join(output_folder, "neo-installer.jar"), "wb") as f:
             f.write(installer_data.content)

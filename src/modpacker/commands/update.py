@@ -15,7 +15,6 @@ def update():
         mod_loader = "fabric"
     elif "forge" in packer_config["dependencies"]:
         mod_loader = "forge"
-    minecraft_version = packer_config["dependencies"]["minecraft"]
 
     for idx, mod in enumerate(packer_config["files"]):
         if "modrinth" in mod["downloads"][0]:

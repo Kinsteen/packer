@@ -31,7 +31,7 @@ def add(provider: ModProvider, slugs, save, latest):
             added = False
             for idx, mod in enumerate(packer_config["files"]):
                 if new_file["slug"] == mod["slug"]:
-                    print("Mod already exists in the pack!")
+                    print(f"Mod {mod['slug']} already exists in the pack, changing in place")
                     packer_config["files"][idx] = new_file
                     added = True
             if not added:

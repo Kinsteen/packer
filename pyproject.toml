@@ -15,6 +15,7 @@ dependencies = [
     "tomli-w",
     "questionary>=2.1.1",
     "brotli>=1.2.0",
+    "jsonschema>=4.26.0",
 ]
 
 [project.urls]

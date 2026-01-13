@@ -1,6 +1,7 @@
 import logging
 
 import click
+import jsonschema
 
 import modpacker.compile
 import modpacker.config as config
@@ -32,7 +33,17 @@ def main(ctx, verbose):
 
     config.load_cache()
 
-    c = config.open_config(silently_fail=True)
+    try:
+        c = config.open_config()
+    except jsonschema.exceptions.ValidationError as e:
+        logger.error(f"'packer_config.json' is invalid: {e.message}", exc_info=True)
+        logger.error(e.message)
+        exit(1)
+    except Exception as e:
+        logger.error("There was an error while opening 'packer_config.json':")
+        logger.error(e)
+        exit(1)
+
     if c is None:
         logger.error("Can't find a 'packer_config.json' in the current directory.")
         exit(1)

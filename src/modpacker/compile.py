@@ -112,13 +112,13 @@ source={source}
     return unsup_content.strip()
 
 def compile():
-    modrinth_index = open_config()
+    packer_config = open_config()
 
     unsup_config = None
-    if "unsup" in modrinth_index:
-        unsup_config = modrinth_index["unsup"]
+    if "unsup" in packer_config:
+        unsup_config = packer_config["unsup"]
 
-    for file in modrinth_index["files"]:
+    for file in packer_config["files"]:
         # Remove keys that are not modrinth.index.json standard
         for key in ["type", "slug", "project_url", "version_id"]:
             if key in file:
@@ -138,12 +138,12 @@ def compile():
             file["fileSize"] = get_from_cache(path, "size", lambda: len(read_or_download(path, url)))
 
     with open("modrinth.index.json", "w") as output:
-        output.write(json.dumps(modrinth_index, indent=4))
+        output.write(json.dumps(packer_config, indent=4))
 
     logger.info("Zipping pack...")
-    pack_name = f"{modrinth_index['name'].replace(' ', '-')}-{modrinth_index['versionId'].replace(' ', '-')}.mrpack"
+    pack_name = f"{packer_config['name'].replace(' ', '-')}-{packer_config['versionId'].replace(' ', '-')}.mrpack"
     with zipfile.ZipFile(pack_name, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
-        zip.writestr("modrinth.index.json", json.dumps(modrinth_index, indent=4))
+        zip.writestr("modrinth.index.json", json.dumps(packer_config, indent=4))
         if unsup_config:
             logger.info("Generating unsup.ini...")
             zip.writestr("overrides/unsup.ini", unsup_ini_content(unsup_config))
