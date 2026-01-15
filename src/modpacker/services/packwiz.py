@@ -100,9 +100,16 @@ def convert(output_folder):
         with open(os.path.join(output_folder, "unsup.ini"), "w") as f:
             f.write(unsup_ini_content(packer_config["unsup"]))
 
+        packwiz_toml = {
+            "features": {
+                "metafiles_zip": True
+            }
+        }
+        if "packwiz_toml" in packer_config["unsup"]:
+            packwiz_toml = packwiz_toml | packer_config["unsup"]["packwiz_toml"]
+            
         with open(os.path.join(output_folder, "unsup.toml"), "w") as f:
-            f.write("[features]\n")
-            f.write("metafiles_zip = true\n")
+            f.write(tomli_w.dumps(packwiz_toml))
 
     with open(os.path.join(output_folder, "index.toml"), "wb") as f:
         tomli_w.dump(indextoml, f)

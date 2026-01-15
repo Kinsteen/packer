@@ -146,7 +146,7 @@ def compile_prism(packer_config):
         ],
     }
 
-    unsup_latest_release = requests.get(f"https://git.sleeping.town/api/v1/repos/unascribed/unsup/releases/tags/v{packer_config['unsup']['version']}").json()
+    unsup_latest_release = requests.get(f"https://git.sleeping.town/api/v1/repos/exa/unsup/releases/tags/v{packer_config['unsup']['version']}").json()
     for asset in unsup_latest_release['assets']:
         if asset['name'] == "com.unascribed.unsup.json":
             unsup_patch = requests.get(asset['browser_download_url']).content

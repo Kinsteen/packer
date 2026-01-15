@@ -1,6 +1,8 @@
 import json
 import logging
 
+import questionary
+
 from modpacker.config import open_config, persist_config
 from modpacker.services.provider import ModProvider
 
@@ -20,6 +22,8 @@ def add(provider: ModProvider, slugs, save, latest):
     chosen_mods = list()
 
     for slug in slugs:
+        if slug.startswith("http"):
+            slug = slug.split("/")[-1]
         mod = provider.get_mod(slug)
         if mod is None:
             continue
@@ -31,8 +35,13 @@ def add(provider: ModProvider, slugs, save, latest):
             added = False
             for idx, mod in enumerate(packer_config["files"]):
                 if new_file["slug"] == mod["slug"]:
-                    print(f"Mod {mod['slug']} already exists in the pack, changing in place")
-                    packer_config["files"][idx] = new_file
+                    if new_file['downloads'][0] != packer_config['files'][idx]['downloads'][0]:
+                        logger.info(f"Mod {mod['slug']} already exists in the pack, changing in place")
+                        logger.info(f"New URL: {new_file['downloads'][0]}")
+                        logger.info(f"Old URL: {packer_config['files'][idx]['downloads'][0]}")
+                        should_replace = questionary.confirm("Replace?").ask()
+                        if should_replace:
+                            packer_config["files"][idx] = new_file
                     added = True
             if not added:
                 if new_file not in packer_config["files"]:

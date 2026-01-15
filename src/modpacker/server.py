@@ -69,7 +69,7 @@ def export(output_folder):
 
     if "unsup" in packer_config:
         logger.info("Downloading unsup.jar and creating unsup.ini...")
-        latest_release = requests.get(f"https://git.sleeping.town/api/v1/repos/unascribed/unsup/releases/tags/v{packer_config['unsup']['version']}").json()
+        latest_release = requests.get(f"https://git.sleeping.town/api/v1/repos/exa/unsup/releases/tags/v{packer_config['unsup']['version']}").json()
         for asset in latest_release['assets']:
             if asset['name'].endswith('.jar'):
                 unsup_jar = requests.get(asset['browser_download_url'])
