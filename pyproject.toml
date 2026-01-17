@@ -30,8 +30,8 @@ line-length = 150
 
 [tool.ruff]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "black",
     "ruff",
     "isort",
