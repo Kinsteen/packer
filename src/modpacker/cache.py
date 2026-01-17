@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class Cache:
-    def __init__(self, cache_file="packer_cache.json", cache_folder="."):
+    def __init__(self, cache_file="packer_cache.json", cache_folder=".cache"):
+        self._session = requests.session()
         self._cache_file_path = os.path.join(os.path.realpath(cache_folder), cache_file)
         self._cache_folder_path = os.path.realpath(cache_folder)
         logger.debug("Loading cache from %s", self._cache_file_path)
@@ -42,12 +43,13 @@ class Cache:
 
     def read_or_download(self, path: str, url: str) -> bytes:
         cache_path = Path(os.path.join(self._cache_folder_path, path))
+        logger.debug("Trying to read file %s", os.path.realpath(cache_path))
         if cache_path.exists():
             with open(cache_path, "rb") as f:
                 return f.read()
         else:
             logger.info(f"Downloading {url}")
-            remote = requests.get(url)
+            remote = self._session.get(url)
             if not cache_path.parent.exists():
                 os.makedirs(cache_path.parent, exist_ok=True)
             with open(cache_path, "wb") as f:

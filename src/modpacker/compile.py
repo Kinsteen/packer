@@ -82,7 +82,7 @@ def get_slug(file):
         return mod["slug"]
 
 
-def unsup_ini_content(config):
+def unsup_ini_content(config, selected_flavors=None):
     unsup_ini = """
 version=1
 preset=minecraft
@@ -92,7 +92,11 @@ source={source}
 """
     unsup_content = unsup_ini.format(source=config["source"])
     if "signature" in config:
-        unsup_content += "public_key=" + config["signature"]
+        unsup_content += "public_key=" + config["signature"] + "\n"
+    if selected_flavors is not None and len(selected_flavors.keys()) > 0:
+        unsup_content += "\n[flavors]\n"
+        for id, selected in selected_flavors.items():
+            unsup_content += f"{id}={selected}\n"
     return unsup_content.strip()
 
 def compile_prism(packer_config: PackerConfig, output_folder):

@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 import subprocess
+from typing import cast
 
 import questionary
 import requests
@@ -79,16 +80,25 @@ def export(packer_config: PackerConfig, cache: Cache, output_folder, unattended 
 
     if packer_config.has_unsup():
         logger.info("Downloading unsup.jar and creating unsup.ini...")
-        latest_release = requests.get(f"https://git.sleeping.town/api/v1/repos/exa/unsup/releases/tags/v{packer_config['unsup']['version']}").json()
-        for asset in latest_release['assets']:
-            if asset['name'].endswith('.jar'):
-                unsup_jar = requests.get(asset['browser_download_url'])
-                with open(os.path.join(output_folder, 'unsup.jar'), "wb") as f:
-                    f.write(unsup_jar.content)
+        with open(os.path.join(output_folder, 'unsup.jar'), "wb") as f:
+            f.write(requests.get(f"https://unsup.y2k.diy/api/v1/download/{packer_config['unsup']['version']}.jar").content)
+
+        selected_flavors = None
+
+        if "packwiz_toml" in packer_config["unsup"] and "flavor_groups" in packer_config["unsup"]["packwiz_toml"]:
+            selected_flavors = {}
+            groups = cast(dict[str, dict[str, str]], packer_config["unsup"]["packwiz_toml"]["flavor_groups"])
+            for id, group in groups.items():
+                if group["side"] == "both" or group["side"] == "server":
+                    group_choice = questionary.select(
+                        f"Detected flavor group {group['name']} that need to be chosen on server. Pick the one selected",
+                        choices=list(map(lambda g: g["id"], group["choices"]))
+                    ).ask()
+                    selected_flavors[id] = group_choice
 
         with open(os.path.join(output_folder, 'unsup.ini'), "w") as f:
-            f.write(unsup_ini_content(packer_config["unsup"]))
-        
+            f.write(unsup_ini_content(packer_config["unsup"], selected_flavors))
+
         if os.path.exists(os.path.join(output_folder, 'user_jvm_args.txt')):
             with open(os.path.join(output_folder, 'user_jvm_args.txt'), 'a') as f:
                 f.write("\n-javaagent:unsup.jar")

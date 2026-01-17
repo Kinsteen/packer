@@ -116,7 +116,7 @@ def convert(packer_config: PackerConfig, cache: Cache, output_folder):
         }
         if "packwiz_toml" in packer_config["unsup"]:
             packwiz_toml = packwiz_toml | packer_config["unsup"]["packwiz_toml"]
-            
+
         with open(os.path.join(output_folder, "unsup.toml"), "w") as f:
             f.write(tomli_w.dumps(packwiz_toml))
 
