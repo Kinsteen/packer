@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @click.group(invoke_without_command=True, help="By default, compile the modpack.")
 @click.option("-v", "--verbose", count=True)
 @click.pass_context
+@click.version_option()
 def main(ctx, verbose):
     root_logger = logging.getLogger()
     if verbose > 0:
