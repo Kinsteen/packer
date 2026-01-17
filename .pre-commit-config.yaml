@@ -1,0 +1,7 @@
+repos:
+  - repo: local
+    hooks:
+      - id: tests
+        name: run unit tests
+        language: system
+        entry: uv run verify-tag.py
