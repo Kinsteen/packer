@@ -19,14 +19,10 @@ def test_simple_add_neoforge():
     provider = modrinth.ModrinthProvider(packer_config)
     ret = add(packer_config, provider, ["sodium"], False, True)
     assert len(ret) == 1
-    assert ret[0]["slug"] == "sodium"
-    assert ret[0]["project_url"] == "https://modrinth.com/mod/sodium"
-    assert ret[0]["env"] == {
+    check_version(ret[0], "sodium", {
         "client": "required",
         "server": "unsupported",
-    }
-    assert len(ret[0]["downloads"]) == 1
-    assert "modrinth.com" in ret[0]["downloads"][0]
+    })
     assert "sodium-neoforge" in ret[0]["downloads"][0]
 
 
@@ -46,14 +42,10 @@ def test_simple_add_fabric():
     provider = modrinth.ModrinthProvider(packer_config)
     ret = add(packer_config, provider, ["sodium"], False, True)
     assert len(ret) == 1
-    assert ret[0]["slug"] == "sodium"
-    assert ret[0]["project_url"] == "https://modrinth.com/mod/sodium"
-    assert ret[0]["env"] == {
+    check_version(ret[0], "sodium", {
         "client": "required",
         "server": "unsupported",
-    }
-    assert len(ret[0]["downloads"]) == 1
-    assert "modrinth.com" in ret[0]["downloads"][0]
+    })
     assert "sodium-fabric" in ret[0]["downloads"][0]
 
 
@@ -74,38 +66,27 @@ def test_simple_with_deps_neoforge():
     ret = add(packer_config, provider, ["applied-mekanistics"], False, True)
 
     assert len(ret) == 4
-    assert ret[0]["slug"] == "applied-mekanistics"
-    assert ret[0]["project_url"] == "https://modrinth.com/mod/applied-mekanistics"
-    assert ret[0]["env"] == {
-        "client": "required",
-        "server": "required",
-    }
-    assert len(ret[0]["downloads"]) == 1
-    assert "modrinth.com" in ret[0]["downloads"][0]
 
-    assert ret[1]["slug"] == "mekanism"
-    assert ret[1]["project_url"] == "https://modrinth.com/mod/mekanism"
-    assert ret[1]["env"] == {
+    check_version(ret[0], "applied-mekanistics", {
         "client": "required",
         "server": "required",
-    }
-    assert len(ret[1]["downloads"]) == 1
-    assert "modrinth.com" in ret[1]["downloads"][0]
+    })
+    check_version(ret[1], "ae2", {
+        "client": "required",
+        "server": "required",
+    })
+    check_version(ret[2], "guideme", {
+        "client": "required",
+        "server": "required",
+    })
+    check_version(ret[3], "mekanism", {
+        "client": "required",
+        "server": "required",
+    })
 
-    assert ret[2]["slug"] == "ae2"
-    assert ret[2]["project_url"] == "https://modrinth.com/mod/ae2"
-    assert ret[2]["env"] == {
-        "client": "required",
-        "server": "required",
-    }
-    assert len(ret[2]["downloads"]) == 1
-    assert "modrinth.com" in ret[2]["downloads"][0]
-
-    assert ret[3]["slug"] == "guideme"
-    assert ret[3]["project_url"] == "https://modrinth.com/mod/guideme"
-    assert ret[3]["env"] == {
-        "client": "required",
-        "server": "required",
-    }
-    assert len(ret[3]["downloads"]) == 1
-    assert "modrinth.com" in ret[3]["downloads"][0]
+def check_version(version, slug, env):
+    assert version["slug"] == slug
+    assert version["project_url"] == f"https://modrinth.com/mod/{slug}"
+    assert version["env"] == env
+    assert len(version["downloads"]) == 1
+    assert "modrinth.com" in version["downloads"][0]
