@@ -34,6 +34,15 @@ def export(packer_config: PackerConfig, cache: Cache, output_folder, unattended 
                 os.makedirs(os.path.dirname(os.path.join(output_folder, destination)), exist_ok=True)
                 shutil.copy(os.path.join(root, file), os.path.join(output_folder, destination))
 
+    if os.path.exists("server-overrides"):
+        logger.info("Copying server-overrides...")
+        for root, _, files in os.walk("server-overrides"):
+            for file in files:
+                path = os.path.join(root, file)
+                destination = os.path.relpath(path, "server-overrides/")
+                os.makedirs(os.path.dirname(os.path.join(output_folder, destination)), exist_ok=True)
+                shutil.copy(os.path.join(root, file), os.path.join(output_folder, destination))
+
     logger.info("Copying mods...")
     with logging_redirect_tqdm():
         for file in tqdm.tqdm(packer_config["files"]):

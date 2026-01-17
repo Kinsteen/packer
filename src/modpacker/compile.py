@@ -31,7 +31,7 @@ def get_sha512(data):
     return hash.hexdigest()
 
 
-def add_folder_to_zip(zipf: zipfile.ZipFile, folder_name, base_folder="overrides"):
+def add_folder_to_zip(zipf: zipfile.ZipFile, folder_name):
     for root, _, files in os.walk(folder_name):
         for file in files:
             file_path = root + "/" + file
@@ -171,12 +171,9 @@ def compile(packer_config: PackerConfig, cache: Cache, prism = False, output_fol
         if "fileSize" not in file or file["fileSize"] == 0:
             file["fileSize"] = cache.get_or(path, "size", lambda: len(cache.read_or_download(path, url)))
 
-    os.makedirs(output_folder, exist_ok=True)
-    with open(os.path.join(output_folder, "modrinth.index.json"), "w") as output:
-        output.write(json.dumps(data, indent=4))
-
     logger.info("Zipping pack...")
     pack_name = f"{data['name'].replace(' ', '-')}-{data['versionId'].replace(' ', '-')}.mrpack"
+    os.makedirs(output_folder, exist_ok=True)
     with zipfile.ZipFile(os.path.join(output_folder, pack_name), "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
         zip.writestr("modrinth.index.json", json.dumps(data, indent=4))
         if unsup_config:
@@ -184,3 +181,5 @@ def compile(packer_config: PackerConfig, cache: Cache, prism = False, output_fol
             zip.writestr("overrides/unsup.ini", unsup_ini_content(unsup_config))
 
         add_folder_to_zip(zip, "overrides")
+        add_folder_to_zip(zip, "client-overrides")
+        add_folder_to_zip(zip, "server-overrides")

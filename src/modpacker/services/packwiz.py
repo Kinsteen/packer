@@ -80,6 +80,16 @@ def convert(packer_config: PackerConfig, cache: Cache, output_folder):
                 with open(os.path.join(output_folder, destination), "rb") as f:
                     indextoml["files"].append({"file": destination.replace("\\", "/"), "hash": hashlib.sha256(f.read()).hexdigest()})
 
+    if os.path.exists("client-overrides"):
+        for root, _, files in os.walk("client-overrides"):
+            for file in files:
+                path = os.path.join(root, file)
+                destination = os.path.relpath(path, "client-overrides/")
+                os.makedirs(os.path.dirname(os.path.join(output_folder, destination)), exist_ok=True)
+                shutil.copy(os.path.join(root, file), os.path.join(output_folder, destination))
+                with open(os.path.join(output_folder, destination), "rb") as f:
+                    indextoml["files"].append({"file": destination.replace("\\", "/"), "hash": hashlib.sha256(f.read()).hexdigest()})
+
     if packer_config.has_unsup():
         # Create compressed metafiles
         try:

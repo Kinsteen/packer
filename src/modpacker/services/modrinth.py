@@ -63,7 +63,7 @@ class ModrinthProvider(ModProvider):
             return
 
         mod_versions = get(
-            f'https://api.modrinth.com/v2/project/{mod["slug"]}/version?loaders=["{mod_loader}"]&game_versions=["{minecraft_version}"]'
+            f'https://api.modrinth.com/v2/project/{mod["slug"]}/version?loaders=["{mod_loader}"]&game_versions=["{minecraft_version}"]&include_changelog=false'
         )
         if not latest:
             choices = list(map(lambda version: version["name"], mod_versions))
@@ -101,7 +101,7 @@ class ModrinthProvider(ModProvider):
             if dep_mod["slug"] in seen:
                 continue  # Skip already added mod
 
-            dep_versions = get(f"https://api.modrinth.com/v2/project/{dep_mod['slug']}/version?loaders={loaders}&game_versions={game_versions}")
+            dep_versions = get(f"https://api.modrinth.com/v2/project/{dep_mod['slug']}/version?loaders={loaders}&game_versions={game_versions}&include_changelog=false")
 
             # No suitable versions has been found, continuing with another dep
             if len(dep_versions) == 0:
@@ -135,7 +135,7 @@ class ModrinthProvider(ModProvider):
                             f"Mod '{mod['title']}' version '{mod_version['name']}' requires mod '{dep_mod['title']}' with version ID '{dep['version_id']}', but it wasn't found in the search."
                         )
                         logger.error(
-                            f"API URL searched: https://api.modrinth.com/v2/project/{dep['project_id']}/version?loaders={loaders}&game_versions={game_versions}"
+                            f"API URL searched: https://api.modrinth.com/v2/project/{dep['project_id']}/version?loaders={loaders}&game_versions={game_versions}&include_changelog=false"
                         )
                         return False
                     elif len(next_versions) == 1:
