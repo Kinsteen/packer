@@ -1,12 +1,11 @@
 import os
-from modpacker import config
+
+from modpacker.cache import Cache
 from modpacker.compile import compile
 from modpacker.packer_config import PackerConfig
 
 
 def test_simple_compile(tmp_path):
-    config.load_cache()
-
     packer_config = PackerConfig(
         {
             "formatVersion": 1,
@@ -26,16 +25,15 @@ def test_simple_compile(tmp_path):
             ],
         }
     )
+    cache = Cache(cache_folder=os.path.join(tmp_path, ".cache"))
 
-    compile(packer_config, output_folder=tmp_path)
+    output_path = os.path.join(tmp_path, "output")
+    compile(packer_config, cache, output_folder=output_path)
 
-    assert len(os.listdir(tmp_path)) == 1
-    assert os.listdir(tmp_path)[0] == "Test-0.0.1.mrpack"
+    assert len(os.listdir(output_path)) == 1
+    assert os.listdir(output_path)[0] == "Test-0.0.1.mrpack"
 
 def test_simple_compile_prism(tmp_path):
-    # TODO create a real cache class/instance, and insert a fake cache (that write to tmp_path/cache)
-    config.load_cache()
-
     packer_config = PackerConfig(
         {
             "formatVersion": 1,
@@ -59,10 +57,11 @@ def test_simple_compile_prism(tmp_path):
             ],
         }
     )
+    cache = Cache(cache_folder=os.path.join(tmp_path, ".cache"))
 
     output_path = os.path.join(tmp_path, "output")
 
-    compile(packer_config, prism=True, output_folder=output_path)
+    compile(packer_config, cache, prism=True, output_folder=output_path)
 
     assert len(os.listdir(output_path)) == 1
     assert os.listdir(output_path)[0] == "Test-0.0.1-prism.zip"

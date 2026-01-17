@@ -1,17 +1,8 @@
-import atexit
 import json
 import os
 from typing import Callable
 
 from jsonschema import validate
-
-
-def on_exit():
-    persist_cache()
-
-
-atexit.register(on_exit)
-cache = None
 
 packer_config_schema = {
     "type": "object",
@@ -181,12 +172,6 @@ def order_dict(dictionary):
     }
 
 
-def persist_cache() -> dict:
-    if cache is not None and len(cache.keys()) > 0:
-        with open("packer_cache.json", "w") as new_cache:
-            new_cache.write(json.dumps(order_dict(cache), indent=4))
-
-
 def set_cache(key, val):
     global cache
     cache[key] = val
@@ -201,12 +186,3 @@ def get_from_cache(name: str, property: str, get: Callable):
             cache[name] = {}
         cache[name][property] = get()
         return cache[name][property]
-
-
-def get_loader(packer_config):
-    if "neoforge" in packer_config["dependencies"]:
-        return "neoforge"
-    elif "fabric" in packer_config["dependencies"]:
-        return "fabric"
-    elif "forge" in packer_config["dependencies"]:
-        return "forge"

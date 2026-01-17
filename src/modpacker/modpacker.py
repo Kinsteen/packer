@@ -1,3 +1,4 @@
+import atexit
 import logging
 
 import click
@@ -10,13 +11,13 @@ import modpacker.services.curseforge as cf
 import modpacker.services.modrinth as mr
 import modpacker.services.packwiz as pw
 from modpacker import server
+from modpacker.cache import Cache
 from modpacker.commands.add import add
 from modpacker.commands.update import update as update_exec
 from modpacker.log.multi_formatter import MultiFormatter
 from modpacker.packer_config import PackerConfig
 
 logger = logging.getLogger(__name__)
-
 
 @click.group(invoke_without_command=True, help="By default, compile the modpack.")
 @click.option("-v", "--verbose", count=True)
@@ -49,8 +50,15 @@ def main(ctx, verbose):
         logger.error("Can't find a 'packer_config.json' in the current directory.")
         exit(1)
 
-    packer_config = PackerConfig(c)
-    ctx.obj = packer_config
+    cache = Cache()
+    ctx.obj = {
+        "packer_config": PackerConfig(c),
+        "cache": cache
+    }
+
+    def on_exit():
+        cache.persist()
+    atexit.register(on_exit)
 
     if modpacker.migration.check_migrations():
         logger.info("Running migrations...")
@@ -59,14 +67,14 @@ def main(ctx, verbose):
         logger.info("Done!")
 
     if ctx.invoked_subcommand is None:
-        modpacker.compile.compile()
+        modpacker.compile.compile(ctx.obj["packer_config"], ctx.obj["cache"])
 
 
 @main.command(help="Compile the modpack in the current directory.")
 @click.option("--prism", default=False, is_flag=True)
 @click.pass_obj
-def compile(packer_config, prism):
-    modpacker.compile.compile(packer_config, prism)
+def compile(obj, prism):
+    modpacker.compile.compile(obj["packer_config"], obj["cache"], prism)
 
 
 @main.group(help="Curseforge helper tools")
@@ -117,16 +125,16 @@ def modrinth():
 )
 @click.argument("slugs", nargs=-1)
 @click.pass_obj
-def modrinth_add(packer_config, slugs, save, latest):
-    provider = mr.ModrinthProvider(packer_config)
-    add(packer_config, provider, slugs, save, latest)
+def modrinth_add(obj, slugs, save, latest):
+    provider = mr.ModrinthProvider(obj["packer_config"])
+    add(obj["packer_config"], provider, slugs, save, latest)
 
 
 @main.command(help="Export modpack to packwiz format.")
 @click.argument("output", type=click.Path())
 @click.pass_obj
-def packwiz(packer_config, output):
-    pw.convert(packer_config, output)
+def packwiz(obj, output):
+    pw.convert(obj["packer_config"], obj["cache"], output)
 
 
 @main.group(name="server", help="Server tools")
@@ -139,8 +147,8 @@ def server_cmd():
 )
 @click.argument("output", type=click.Path())
 @click.pass_obj
-def server_export(packer_config, output):
-    server.export(packer_config, output)
+def server_export(obj, output):
+    server.export(obj["packer_config"], obj["cache"], output)
 
 
 @main.command(help="Update all mods.")

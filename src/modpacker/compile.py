@@ -3,12 +3,11 @@ import json
 import logging
 import os
 import zipfile
-from pathlib import Path
 
 import requests
 
 from modpacker.api import get, post
-from modpacker.config import get_from_cache
+from modpacker.cache import Cache
 from modpacker.packer_config import PackerConfig
 
 logger = logging.getLogger(__name__)
@@ -30,22 +29,6 @@ def get_sha512(data):
     hash = hashlib.sha512()
     hash.update(data)
     return hash.hexdigest()
-
-
-def read_or_download(name, url):
-    cache_path = Path(".cache/" + name)
-
-    if not cache_path.exists():
-        logger.info(f"Downloading {url}")
-        remote = requests.get(url)
-        if not cache_path.parent.exists():
-            os.makedirs(cache_path.parent)
-        with open(".cache/" + name, "wb") as f:
-            f.write(remote.content)
-        return remote.content
-    else:
-        with open(".cache/" + name, "rb") as f:
-            return f.read()
 
 
 def add_folder_to_zip(zipf: zipfile.ZipFile, folder_name, base_folder="overrides"):
@@ -155,7 +138,7 @@ def compile_prism(packer_config: PackerConfig, output_folder):
         zip.writestr("mmc-pack.json", json.dumps(mmc_pack, indent=4))
         zip.writestr("patches/com.unascribed.unsup.json", unsup_patch)
 
-def compile(packer_config: PackerConfig, prism = False, output_folder = "."):
+def compile(packer_config: PackerConfig, cache: Cache, prism = False, output_folder = "."):
     unsup_config = None
     if packer_config.has_unsup():
         unsup_config = packer_config["unsup"]
@@ -181,14 +164,15 @@ def compile(packer_config: PackerConfig, prism = False, output_folder = "."):
 
         if "hashes" not in file or "sha1" not in file["hashes"] or "sha256" not in file["hashes"] or "sha512" not in file["hashes"]:
             file["hashes"] = {}
-            file["hashes"]["sha1"] = get_from_cache(path, "sha1", lambda: get_sha1(read_or_download(path, url)))
-            file["hashes"]["sha256"] = get_from_cache(path, "sha256", lambda: get_sha256(read_or_download(path, url)))
-            file["hashes"]["sha512"] = get_from_cache(path, "sha512", lambda: get_sha512(read_or_download(path, url)))
+            file["hashes"]["sha1"] = cache.get_or(path, "sha1", lambda: get_sha1(cache.read_or_download(path, url)))
+            file["hashes"]["sha256"] = cache.get_or(path, "sha256", lambda: get_sha256(cache.read_or_download(path, url)))
+            file["hashes"]["sha512"] = cache.get_or(path, "sha512", lambda: get_sha512(cache.read_or_download(path, url)))
 
         if "fileSize" not in file or file["fileSize"] == 0:
-            file["fileSize"] = get_from_cache(path, "size", lambda: len(read_or_download(path, url)))
+            file["fileSize"] = cache.get_or(path, "size", lambda: len(cache.read_or_download(path, url)))
 
-    with open("modrinth.index.json", "w") as output:
+    os.makedirs(output_folder, exist_ok=True)
+    with open(os.path.join(output_folder, "modrinth.index.json"), "w") as output:
         output.write(json.dumps(data, indent=4))
 
     logger.info("Zipping pack...")

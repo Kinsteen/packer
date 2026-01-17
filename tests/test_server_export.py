@@ -1,5 +1,6 @@
 import os
 
+from modpacker.cache import Cache
 from modpacker.packer_config import PackerConfig
 from modpacker.server import export
 
@@ -24,9 +25,10 @@ def test_simple_export(tmp_path):
             ],
         }
     )
+    cache = Cache(cache_folder=os.path.join(tmp_path, ".cache"))
 
-    export(packer_config, tmp_path, unattended=True)
+    export(packer_config, cache, os.path.join(tmp_path, "export"), unattended=True)
 
-    assert len(os.listdir(tmp_path / "mods")) == 1
-    assert os.listdir(tmp_path / "mods")[0].startswith("Mekanism-1.21.1-")
-    assert os.listdir(tmp_path / "mods")[0].endswith(".jar")
+    assert len(os.listdir(tmp_path / "export" / "mods")) == 1
+    assert os.listdir(tmp_path / "export" / "mods")[0].startswith("Mekanism-1.21.1-")
+    assert os.listdir(tmp_path / "export" / "mods")[0].endswith(".jar")

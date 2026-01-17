@@ -6,15 +6,14 @@ import zipfile
 
 import tomli_w
 
-from modpacker.compile import (get_sha256, get_slug, read_or_download,
-                               unsup_ini_content)
-from modpacker.config import get_from_cache
+from modpacker.cache import Cache
+from modpacker.compile import get_sha256, get_slug, unsup_ini_content
 from modpacker.packer_config import PackerConfig
 
 logger = logging.getLogger(__name__)
 
 
-def convert(packer_config: PackerConfig, output_folder):
+def convert(packer_config: PackerConfig, cache: Cache, output_folder):
     os.makedirs(output_folder, exist_ok=True)
 
     indextoml = {"hash-format": "sha256", "files": []}
@@ -43,7 +42,7 @@ def convert(packer_config: PackerConfig, output_folder):
         path = file["path"]
         url = file["downloads"][0]
 
-        slug = get_from_cache(path, "slug", lambda: get_slug(file))
+        slug = cache.get_or(path, "slug", lambda: get_slug(file))
         # TODO update property for modrinth and curseforge?
         filetoml = {
             "name": slug,
@@ -51,7 +50,7 @@ def convert(packer_config: PackerConfig, output_folder):
             "side": side,
             "download": {
                 "hash-format": "sha256",
-                "hash": get_from_cache(path, "sha256", lambda: get_sha256(read_or_download(path, url))),
+                "hash": cache.get_or(path, "sha256", lambda: get_sha256(cache.read_or_download(path, url))),
                 "url": file["downloads"][0].replace(" ", "%20").replace("[", "%5B").replace("]", "%5D"),
             },
         }

@@ -8,13 +8,14 @@ import requests
 import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from modpacker.compile import read_or_download, unsup_ini_content
+from modpacker.cache import Cache
+from modpacker.compile import unsup_ini_content
 from modpacker.packer_config import PackerConfig
 
 logger = logging.getLogger(__name__)
 
 
-def export(packer_config: PackerConfig, output_folder, unattended = False):
+def export(packer_config: PackerConfig, cache: Cache, output_folder, unattended = False):
     output_folder = os.path.realpath(output_folder)
     if os.path.exists(output_folder):
         if not unattended:
@@ -42,7 +43,7 @@ def export(packer_config: PackerConfig, output_folder, unattended = False):
                     path = "mods/" + name
                     os.makedirs(os.path.dirname(os.path.join(output_folder, path)), exist_ok=True)
                     url = file["downloads"][0]
-                    data = read_or_download(path, url)
+                    data = cache.read_or_download(path, url)
                     with open(os.path.join(output_folder, path), "wb") as f:
                         f.write(data)
 
