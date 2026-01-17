@@ -201,3 +201,12 @@ def get_from_cache(name: str, property: str, get: Callable):
             cache[name] = {}
         cache[name][property] = get()
         return cache[name][property]
+
+
+def get_loader(packer_config):
+    if "neoforge" in packer_config["dependencies"]:
+        return "neoforge"
+    elif "fabric" in packer_config["dependencies"]:
+        return "fabric"
+    elif "forge" in packer_config["dependencies"]:
+        return "forge"

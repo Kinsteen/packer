@@ -4,7 +4,6 @@ import questionary
 import requests
 
 from modpacker.api import get
-from modpacker.config import open_config
 from modpacker.services.provider import ModProvider
 
 logger = logging.getLogger(__name__)
@@ -47,7 +46,6 @@ def mod_and_version_to_dict(mod, version):
 
 
 class CurseforgeProvider(ModProvider):
-
     def get_mod(self, slug):
         maybe_mod = get(f"https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=6&slug={slug}")
         if maybe_mod is None or len(maybe_mod["data"]) == 0:
@@ -55,8 +53,8 @@ class CurseforgeProvider(ModProvider):
             return None
         return maybe_mod["data"][0]
 
-    def pick_mod_version(self, mod, minecraft_version, mod_loader, latest=False):
-        mod_versions = get(f"https://api.curse.tools/v1/cf/mods/{mod['id']}/files?gameVersion={minecraft_version}&modLoaderType={mod_loader}")["data"]
+    def pick_mod_version(self, mod, minecraft_version, latest=False):
+        mod_versions = get(f"https://api.curse.tools/v1/cf/mods/{mod['id']}/files?gameVersion={minecraft_version}&modLoaderType={self.packer_config.mod_loader}")["data"]
         if not latest:
             choices = list(map(lambda version: version["fileName"], mod_versions))
             answer = questionary.select(f"What version for version '{mod['name']}'?", choices).ask()
@@ -74,13 +72,12 @@ class CurseforgeProvider(ModProvider):
         return super().get_download_link(slug, version)
 
     def resolve_dependencies(self, mod_id, file_id: str, latest=False, _current_list=None):
-        packer_config = open_config()
-        minecraft_version = packer_config["dependencies"]["minecraft"]
-        if "neoforge" in packer_config["dependencies"]:
+        minecraft_version = self.packer_config.minecraft_version
+        if self.packer_config.mod_loader == "neoforge":
             mod_loader = 6
-        elif "fabric" in packer_config["dependencies"]:
+        elif self.packer_config.mod_loader == "fabric":
             mod_loader = 4
-        elif "forge" in packer_config["dependencies"]:
+        elif self.packer_config.mod_loader == "forge":
             mod_loader = 1
 
         if not mod_loader:

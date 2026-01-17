@@ -53,7 +53,15 @@ class ModrinthProvider(ModProvider):
     def get_mod(self, slug):
         return get(f"https://api.modrinth.com/v2/project/{slug}")
 
-    def pick_mod_version(self, mod, minecraft_version, mod_loader, latest=False):
+    def pick_mod_version(self, mod, minecraft_version, latest=False):
+        mod_loader = self.packer_config.mod_loader
+
+        if mod["project_type"] == "resourcepack":
+            mod_loader = "minecraft"
+        if mod["project_type"] == "shader":
+            logger.error("Adding shader automatically is not supported currenctly.")
+            return
+
         mod_versions = get(
             f'https://api.modrinth.com/v2/project/{mod["slug"]}/version?loaders=["{mod_loader}"]&game_versions=["{minecraft_version}"]'
         )
@@ -80,7 +88,7 @@ class ModrinthProvider(ModProvider):
                 return _current_list
 
         mod_version = get(f"https://api.modrinth.com/v2/project/{mod_id}/version/{version_id}")
-        loaders = json.dumps(mod_version["loaders"])
+        loaders = json.dumps([self.packer_config.mod_loader])
         game_versions = json.dumps(mod_version["game_versions"])
 
         _current_list.append(mod_and_version_to_dict(mod, mod_version))

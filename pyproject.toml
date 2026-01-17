@@ -31,7 +31,12 @@ line-length = 150
 [tool.ruff]
 
 [tool.uv]
-dev-dependencies = ["black", "ruff", "isort"]
+dev-dependencies = [
+    "black",
+    "ruff",
+    "isort",
+    "pytest>=9.0.2",
+]
 
 [build-system]
 requires = ["uv_build"]

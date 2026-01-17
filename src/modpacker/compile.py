@@ -8,7 +8,8 @@ from pathlib import Path
 import requests
 
 from modpacker.api import get, post
-from modpacker.config import get_from_cache, open_config
+from modpacker.config import get_from_cache
+from modpacker.packer_config import PackerConfig
 
 logger = logging.getLogger(__name__)
 
@@ -111,25 +112,20 @@ source={source}
         unsup_content += "public_key=" + config["signature"]
     return unsup_content.strip()
 
-def get_recommended_lwjgl(minecraft_version: str):
-    r = requests.get("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json").json()
-    for version in r["versions"]:
-        if version["id"] == minecraft_version:
-            version_meta = requests.get(version["url"]).json()
-            for lib in version_meta["libraries"]:
-                if "org.lwjgl:lwjgl-glfw" in lib["name"]:
-                    return lib["name"].split(":")[2]
-
-
-def compile_prism(packer_config):
+def compile_prism(packer_config: PackerConfig, output_folder):
     pack_name = f"{packer_config['name'].replace(' ', '-')}-{packer_config['versionId'].replace(' ', '-')}-prism.zip"
+
+    mod_loader = packer_config.mod_loader
+
+    if mod_loader != "neoforge":
+        logger.error("Prism unsup export is only available on Neoforge pack.")
 
     mmc_pack = {
         "formatVersion": 1,
         "components": [
             {
                 "uid": "org.lwjgl3",
-                "version": get_recommended_lwjgl(packer_config["dependencies"]["minecraft"])
+                "version": packer_config.get_recommended_lwjgl()
             },
             {
                 "uid": "net.minecraft",
@@ -151,27 +147,29 @@ def compile_prism(packer_config):
         if asset['name'] == "com.unascribed.unsup.json":
             unsup_patch = requests.get(asset['browser_download_url']).content
 
-    with zipfile.ZipFile(pack_name, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
+    os.makedirs(output_folder, exist_ok=True)
+
+    with zipfile.ZipFile(os.path.join(output_folder, pack_name), "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
         zip.writestr("instance.cfg", "")
         zip.writestr("minecraft/unsup.ini", unsup_ini_content(packer_config["unsup"]))
         zip.writestr("mmc-pack.json", json.dumps(mmc_pack, indent=4))
         zip.writestr("patches/com.unascribed.unsup.json", unsup_patch)
 
-def compile(prism = False):
-    packer_config = open_config()
-
+def compile(packer_config: PackerConfig, prism = False, output_folder = "."):
     unsup_config = None
-    if "unsup" in packer_config:
+    if packer_config.has_unsup():
         unsup_config = packer_config["unsup"]
 
     if prism:
         if unsup_config:
-            return compile_prism(packer_config)
+            return compile_prism(packer_config, output_folder)
         else:
             logger.error("Prism export only works if unsup is set in packer_config.json.")
             exit(1)
 
-    for file in packer_config["files"]:
+    data = packer_config.data
+
+    for file in data["files"]:
         # Remove keys that are not modrinth.index.json standard
         for key in ["type", "slug", "project_url", "version_id"]:
             if key in file:
@@ -191,12 +189,12 @@ def compile(prism = False):
             file["fileSize"] = get_from_cache(path, "size", lambda: len(read_or_download(path, url)))
 
     with open("modrinth.index.json", "w") as output:
-        output.write(json.dumps(packer_config, indent=4))
+        output.write(json.dumps(data, indent=4))
 
     logger.info("Zipping pack...")
-    pack_name = f"{packer_config['name'].replace(' ', '-')}-{packer_config['versionId'].replace(' ', '-')}.mrpack"
-    with zipfile.ZipFile(pack_name, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
-        zip.writestr("modrinth.index.json", json.dumps(packer_config, indent=4))
+    pack_name = f"{data['name'].replace(' ', '-')}-{data['versionId'].replace(' ', '-')}.mrpack"
+    with zipfile.ZipFile(os.path.join(output_folder, pack_name), "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
+        zip.writestr("modrinth.index.json", json.dumps(data, indent=4))
         if unsup_config:
             logger.info("Generating unsup.ini...")
             zip.writestr("overrides/unsup.ini", unsup_ini_content(unsup_config))

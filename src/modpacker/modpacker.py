@@ -13,6 +13,7 @@ from modpacker import server
 from modpacker.commands.add import add
 from modpacker.commands.update import update as update_exec
 from modpacker.log.multi_formatter import MultiFormatter
+from modpacker.packer_config import PackerConfig
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,9 @@ def main(ctx, verbose):
         logger.error("Can't find a 'packer_config.json' in the current directory.")
         exit(1)
 
+    packer_config = PackerConfig(c)
+    ctx.obj = packer_config
+
     if modpacker.migration.check_migrations():
         logger.info("Running migrations...")
         modpacker.migration.migrate_add_project_url()
@@ -60,8 +64,9 @@ def main(ctx, verbose):
 
 @main.command(help="Compile the modpack in the current directory.")
 @click.option("--prism", default=False, is_flag=True)
-def compile(prism):
-    modpacker.compile.compile(prism)
+@click.pass_obj
+def compile(packer_config, prism):
+    modpacker.compile.compile(packer_config, prism)
 
 
 @main.group(help="Curseforge helper tools")
@@ -111,15 +116,17 @@ def modrinth():
     help="Will always pick the latest available version, and will NOT download optional dependencies.",
 )
 @click.argument("slugs", nargs=-1)
-def modrinth_add(slugs, save, latest):
-    provider = mr.ModrinthProvider()
-    add(provider, slugs, save, latest)
+@click.pass_obj
+def modrinth_add(packer_config, slugs, save, latest):
+    provider = mr.ModrinthProvider(packer_config)
+    add(packer_config, provider, slugs, save, latest)
 
 
 @main.command(help="Export modpack to packwiz format.")
 @click.argument("output", type=click.Path())
-def packwiz(output):
-    pw.convert(output)
+@click.pass_obj
+def packwiz(packer_config, output):
+    pw.convert(packer_config, output)
 
 
 @main.group(name="server", help="Server tools")
@@ -131,8 +138,9 @@ def server_cmd():
     name="export", help="Export modpack for server (only server files)."
 )
 @click.argument("output", type=click.Path())
-def server_export(output):
-    server.export(output)
+@click.pass_obj
+def server_export(packer_config, output):
+    server.export(packer_config, output)
 
 
 @main.command(help="Update all mods.")

@@ -1,9 +1,14 @@
 import logging
 
+from modpacker.packer_config import PackerConfig
+
 logger = logging.getLogger(__name__)
 
 
 class ModProvider:
+    def __init__(self, packer_config: PackerConfig):
+        self.packer_config = packer_config
+
     def get_mod(self, slug):
         pass
 

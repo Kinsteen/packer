@@ -8,13 +8,13 @@ import tomli_w
 
 from modpacker.compile import (get_sha256, get_slug, read_or_download,
                                unsup_ini_content)
-from modpacker.config import get_from_cache, open_config
+from modpacker.config import get_from_cache
+from modpacker.packer_config import PackerConfig
 
 logger = logging.getLogger(__name__)
 
 
-def convert(output_folder):
-    packer_config = open_config()
+def convert(packer_config: PackerConfig, output_folder):
     os.makedirs(output_folder, exist_ok=True)
 
     indextoml = {"hash-format": "sha256", "files": []}
@@ -81,7 +81,7 @@ def convert(output_folder):
                 with open(os.path.join(output_folder, destination), "rb") as f:
                     indextoml["files"].append({"file": destination.replace("\\", "/"), "hash": hashlib.sha256(f.read()).hexdigest()})
 
-    if "unsup" in packer_config:
+    if packer_config.has_unsup():
         # Create compressed metafiles
         try:
             import brotli
@@ -127,7 +127,7 @@ def convert(output_folder):
     for dep in packer_config["dependencies"]:
         packtoml["versions"][dep] = packer_config["dependencies"][dep]
 
-    if "unsup" in packer_config:
+    if packer_config.has_unsup():
         packtoml["versions"]["unsup"] = packer_config["unsup"]["version"]
 
     with open(os.path.join(output_folder, "pack.toml"), "wb") as f:
