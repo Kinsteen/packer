@@ -65,13 +65,15 @@ def test_simple_with_deps_neoforge():
     provider = modrinth.ModrinthProvider(packer_config)
     ret = add(packer_config, provider, ["applied-mekanistics"], False, True)
 
+    ret = sorted(ret, key=lambda m: m["slug"])
+
     assert len(ret) == 4
 
-    check_version(ret[0], "applied-mekanistics", {
+    check_version(ret[0], "ae2", {
         "client": "required",
         "server": "required",
     })
-    check_version(ret[1], "ae2", {
+    check_version(ret[1], "applied-mekanistics", {
         "client": "required",
         "server": "required",
     })
@@ -79,6 +81,7 @@ def test_simple_with_deps_neoforge():
         "client": "required",
         "server": "required",
     })
+
     check_version(ret[3], "mekanism", {
         "client": "required",
         "server": "required",
