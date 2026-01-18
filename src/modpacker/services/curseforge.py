@@ -30,7 +30,7 @@ def classid_to_cat(classid) -> str:
 def mod_and_version_to_dict(mod, version):
     ret = {
         "slug": mod["slug"],
-        "version_id": version["id"],
+        "version_id": f"{version['id']}",
         "project_url": mod["links"]["websiteUrl"],
         "downloads": [version["downloadUrl"]],
         "env": {
@@ -69,7 +69,7 @@ class CurseforgeProvider(ModProvider):
 
     @staticmethod
     def get_download_link(slug, version):
-        return super().get_download_link(slug, version)
+        return version["downloadUrl"]
 
     def resolve_dependencies(self, mod_id, file_id: str, latest=False, _current_list=None):
         minecraft_version = self.packer_config.minecraft_version

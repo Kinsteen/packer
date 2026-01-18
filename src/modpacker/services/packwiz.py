@@ -106,8 +106,8 @@ def convert(packer_config: PackerConfig, cache: Cache, output_folder):
             logger.warning(f"Couldn't create unsup-metafiles.zip.br: {e}")
 
         # Create unsup.ini
-        with open(os.path.join(output_folder, "unsup.ini"), "w") as f:
-            f.write(unsup_ini_content(packer_config["unsup"]))
+        # with open(os.path.join(output_folder, "unsup.ini"), "w") as f:
+        #     f.write(unsup_ini_content(packer_config["unsup"]))
 
         packwiz_toml = {
             "features": {

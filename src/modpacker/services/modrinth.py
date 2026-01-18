@@ -162,5 +162,6 @@ class ModrinthProvider(ModProvider):
                     self.resolve_dependencies(dep_mod["id"], dep_versions[choice]["id"], latest, _current_list)
         return _current_list
 
+    @staticmethod
     def get_download_link(slug, version):
         return version["files"][0]["url"]

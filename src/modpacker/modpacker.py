@@ -103,9 +103,10 @@ def curseforge_url(url: str):
     help="Will always pick the latest available version, and will NOT download optional dependencies.",
 )
 @click.argument("slugs", nargs=-1)
-def curseforge_add(slugs, save, latest):
-    provider = cf.CurseforgeProvider()
-    add(provider, slugs, save, latest)
+@click.pass_obj
+def curseforge_add(obj, slugs, save, latest):
+    provider = cf.CurseforgeProvider(obj["packer_config"])
+    add(obj["packer_config"], provider, slugs, save, latest)
 
 
 @main.group(help="Modrinth helper tools")
@@ -153,5 +154,6 @@ def server_export(obj, output):
 
 
 @main.command(help="Update all mods.")
-def update():
-    update_exec()
+@click.pass_obj
+def update(obj):
+    update_exec(obj["packer_config"])
