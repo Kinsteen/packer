@@ -30,6 +30,6 @@ def update(packer_config: PackerConfig):
             if url != data["files"][idx]["downloads"][0]:
                 logger.info(f"Found update for {mod['slug']}")
                 data["files"][idx]["downloads"][0] = url
-                data["files"]["versionId"] = version["id"]
+                data["files"][idx]["version_id"] = version["id"]
 
     persist_config(data)
