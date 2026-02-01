@@ -71,6 +71,8 @@ class ModrinthProvider(ModProvider):
             choice = choices.index(answer)
         else:
             choice = 0
+        if len(mod_versions) == 0:
+            raise Exception(f"Couldn't find a version for mod {mod['slug']} and loader {mod_loader}")
         return mod_versions[choice]
 
     def resolve_dependencies(self, mod_id, version_id, latest, _current_list=None) -> list[dict]:
