@@ -82,7 +82,7 @@ def get_slug(file):
         return mod["slug"]
 
 
-def unsup_ini_content(config, selected_flavors=None):
+def unsup_ini_content(config, selected_flavors=None, behavior=None):
     unsup_ini = """
 version=1
 preset=minecraft
@@ -97,6 +97,8 @@ source={source}
         unsup_content += "\n[flavors]\n"
         for id, selected in selected_flavors.items():
             unsup_content += f"{id}={selected}\n"
+    if behavior is not None:
+        unsup_content += f"behavior={behavior}\n"
     return unsup_content.strip()
 
 def compile_prism(packer_config: PackerConfig, output_folder):
@@ -138,7 +140,7 @@ def compile_prism(packer_config: PackerConfig, output_folder):
 
     with zipfile.ZipFile(os.path.join(output_folder, pack_name), "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as zip:
         zip.writestr("instance.cfg", "")
-        zip.writestr("minecraft/unsup.ini", unsup_ini_content(packer_config["unsup"]))
+        zip.writestr("minecraft/unsup.ini", unsup_ini_content(packer_config["unsup"], behavior="semi"))
         zip.writestr("mmc-pack.json", json.dumps(mmc_pack, indent=4))
         zip.writestr("patches/com.unascribed.unsup.json", unsup_patch)
 
