@@ -64,23 +64,7 @@ def get_path(file):
 
 
 def get_slug(file):
-    """Get the slug of a mod from its download URL. Is quite expensive, calls should be cached."""
-    url = file["downloads"][0]
-    if "modrinth.com" in url:
-        project_id = url.split("/")[-4]
-        mod = get(f"https://api.modrinth.com/v2/project/{project_id}")
-        return mod["slug"]
-    elif "curse" in url or "forge" in url:
-        file_id = url.split("/")[-3].rjust(4, "0") + url.split("/")[-2].rjust(3, "0")
-        mod_id = post(
-            "https://api.curse.tools/v1/cf/mods/files",
-            {"fileIds": [int(file_id)]},
-        )["data"][
-            0
-        ]["modId"]
-        mod = get(f"https://api.curse.tools/v1/cf/mods/{mod_id}")["data"]
-        return mod["slug"]
-
+    return file["slug"]
 
 def unsup_ini_content(config, selected_flavors=None, behavior=None):
     unsup_ini = """

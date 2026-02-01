@@ -29,6 +29,7 @@ def post(url: str, data: dict) -> dict:
     except Exception:
         logger.error("API POST call was unsuccessful!")
         logger.error(f"URL: {url}")
+        logger.error(f"Data: {data}")
         logger.error(f"Return code: {r.status_code}")
         if r.text:
             logger.error("Response:")

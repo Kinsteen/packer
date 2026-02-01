@@ -44,6 +44,7 @@ def migrate_add_project_url():
                         slug = ret["slug"]
                         file["project_url"] = f"https://modrinth.com/mod/{slug}"
                 else:
+                    # TODO this may not work
                     file_id = dl_url.split("/")[-3].rjust(4, "0") + dl_url.split("/")[-2].rjust(3, "0")
                     mod_id = post(
                         "https://api.curse.tools/v1/cf/mods/files",
